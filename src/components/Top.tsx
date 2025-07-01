@@ -1,25 +1,21 @@
-import { useNavigate } from 'react-router-dom';
+// src/components/Top.tsx
+import React from "react";
+import { useNavigate } from "react-router-dom";
 
-
-const Top = () => {
-  const navigate = useNavigate(); // Get the navigation function
-
+const Top: React.FC = () => {
+  const navigate = useNavigate();
 
   const goToTodos = () => {
-    // You can also change the destination depending on conditions 
-    navigate('/todos');
+    navigate("/todos");
   };
 
-
   return (
-    < div >
-      < h1 > Homepage </ h1 >
-      < button onClick={goToTodos} >
-        Todo list
-      </button>
+    <div>
+      <h1>Welcome to My Todo App</h1>
+      <p>This is the homepage of our todo application.</p>
+      <button onClick={goToTodos}>Go to Todo List</button>
     </div>
   );
 };
-
 
 export default Top;
