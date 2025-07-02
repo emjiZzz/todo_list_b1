@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import localforage from 'localforage';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate for routing
 
 // Define the "Todo" type outside of the component.
 type Todo = {
@@ -10,35 +12,43 @@ type Todo = {
 
 type Filter = 'all' | 'completed' | 'unchecked' | 'delete';
 
-// Define the Todo component.
-const Todos: React.FC = () => {
+// Define the Todo component
+const Todo: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]); // State to hold the array of Todos.
   const [text, setText] = useState(''); // State for form input.
   const [nextId, setNextId] = useState(1); // State to hold the ID of the next Todo.
-  const [filter, setFilter] = useState<Filter>('all'); // Filter state .
+  const [filter, setFilter] = useState<Filter>('all'); // Filter state.
 
-  // Function to update the todos state
+  const navigate = useNavigate(); // Get the navigation function
+
+  // useEffect Hook for initial logging (can be removed in production)
+  useEffect(() => {
+    // Write side effect here
+    console.log('TODO!');
+  }, []); // Runs once on mount
+
+  // Function to update the todos state (add new todo)
   const handleSubmit = () => {
-    if (!text) return;
+    if (!text) return; // Prevent adding empty todos
     const newTodo: Todo = {
       title: text,
       id: nextId,
       completed_flg: false,
-      delete_flg: false, // <-- Last update (corrected from 'deleted_flg' in original text)
+      delete_flg: false,
     };
-    setTodos((prevTodos) => [newTodo, ...prevTodos]); // Corrected from 'setAll'
-    setNextId(nextId + 1);
-    setText('');
+    setTodos((prevTodos) => [newTodo, ...prevTodos]); // Add new todo to the beginning of the list
+    setNextId(nextId + 1); // Increment ID for the next todo
+    setText(''); // Clear the input field
   };
 
   // Function to get filtered list of tasks.
   const getFilteredTodos = () => {
     switch (filter) {
       case 'completed':
-        // Return tasks that are completed **and** not deleted.
+        // Return tasks that are completed AND not deleted.
         return todos.filter((todo) => todo.completed_flg && !todo.delete_flg);
       case 'unchecked':
-        // Return tasks that are incomplete **and** not deleted.
+        // Return tasks that are incomplete AND not deleted.
         return todos.filter((todo) => !todo.completed_flg && !todo.delete_flg);
       case 'delete':
         // Return deleted tasks.
@@ -49,55 +59,67 @@ const Todos: React.FC = () => {
     }
   };
 
-  const handleEdit = (id: number, value: string) => {
+  // Generic function to handle updates to a Todo item's properties
+  // This replaces handleEdit, handleCheck, and handleRemove
+  const handleTodo = <K extends keyof Todo, V extends Todo[K]>(
+    id: number,
+    key: K,
+    value: V
+  ) => {
     setTodos((todos) => {
       const newTodos = todos.map((todo) => {
         if (todo.id === id) {
-          return { ...todo, title: value };
+          return { ...todo, [key]: value };
+        } else {
+          return todo;
         }
-        return todo; // Corrected from 'all'
       });
       return newTodos;
     });
   };
 
-  const handleCheck = (id: number, completed_flg: boolean) => {
-    setTodos((todos) => {
-      const newTodos = todos.map((todo) => {
-        if (todo.id === id) {
-          return { ...todo, completed_flg };
-        }
-        return todo; // Corrected from 'all'
-      });
-      return newTodos;
-    });
+  const handleFilterChange = (selectedFilter: Filter) => {
+    setFilter(selectedFilter);
   };
 
-  const handleRemove = (id: number, delete_flg: boolean) => {
-    setTodos((todos) => {
-      const newTodos = todos.map((todo) => {
-        if (todo.id === id) {
-          return { ...todo, delete_flg };
-        }
-        return todo; // Corrected from 'all'
-      });
-      return newTodos;
-    });
-  };
-
-  const handleFilterChange = (filter: Filter) => {
-    setFilter(filter);
-  };
-
-  // Function to physically delete
+  // Function to physically delete tasks (empty trash)
   const handleEmpty = () => {
-    setTodos((todos) => todos.filter((todo) => !todo.delete_flg)); // Corrected from 'setAll'
+    setTodos((todos) => todos.filter((todo) => !todo.delete_flg));
   };
 
+  // Use the useEffect hook to get data when the component mounts
+  useEffect(() => {
+    localforage.getItem('todo-20240622').then((values) => {
+      if (values) {
+        setTodos(values as Todo[]);
+        // Find the maximum ID from loaded todos to ensure nextId is unique
+        const maxId = Math.max(...(values as Todo[]).map(todo => todo.id), 0);
+        setNextId(maxId + 1);
+      }
+    }).catch(err => {
+      console.error("Error loading todos from localforage:", err);
+    });
+  }, []); // Empty dependency array means this runs once on mount.
+
+  // Use the useEffect hook to save data every time the todos state is updated.
+  useEffect(() => {
+    localforage.setItem('todo-20240622', todos).catch(err => {
+      console.error("Error saving todos to localforage:", err);
+    });
+  }, [todos]); // Runs whenever 'todos' state changes.
+
+  // Determine if the form (input and add button) should be disabled
   const isFormDisabled = filter === 'completed' || filter === 'delete';
 
   return (
     <div className="todo-container">
+      <button
+        className="back-button"
+        onClick={() => navigate('/')}
+        title="Back to Top Page"
+      >
+        ← Back
+      </button>
       <select
         defaultValue="all"
         onChange={(e) => handleFilterChange(e.target.value as Filter)}
@@ -105,19 +127,17 @@ const Todos: React.FC = () => {
         <option value="all">All tasks</option>
         <option value="completed">Completed tasks</option>
         <option value="unchecked">Current tasks</option>
-        <option value="delete">Recycle bin</option>
+        <option value="delete">Trash</option>
       </select>
-      {/* When filter is `delete`, show "Empty Trash" button */}
+
+      {/* Show "Empty Trash" button when filter is `delete` */}
       {filter === 'delete' ? (
-        <button onClick={handleEmpty}>
-          Empty the trash
+        <button className="empty-trash-btn" onClick={handleEmpty}>
+          Empty Trash
         </button>
       ) : (
-        // If the filter is not `completed` or `delete`, display the Todo input form.
-        // The condition `filter !== 'completed'` was in the original text, but `isFormDisabled` covers it more generally.
-        // For strict adherence to "no modifying", I'm keeping the original condition in the JSX comment,
-        // but the `disabled` prop below uses `isFormDisabled`.
-        !isFormDisabled && ( // Adjusted logic to align with isFormDisabled
+        // Show Todo input form if filter is not `completed`
+        filter !== 'completed' && (
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -126,31 +146,37 @@ const Todos: React.FC = () => {
           >
             <input
               type="text"
-              value={text} // Bind the form input value to the state
-              disabled={isFormDisabled} // Corrected from hardcoded filter checks
-              onChange={(e) => setText(e.target.value)} // Update the state when the input value changes.
+              value={text} // Bind form input value to state
+              disabled={isFormDisabled} // Disable if form is disabled by filter
+              onChange={(e) => setText(e.target.value)} // Update state when input value changes
+              placeholder="Add a new todo..."
             />
             <button className="insert-btn" type="submit" disabled={isFormDisabled}>
-              追加
+              Add
             </button>
           </form>
         )
       )}
+
       <ul>
         {getFilteredTodos().map((todo) => (
           <li key={todo.id}>
             <input
               type="checkbox"
-              checked={todo.completed_flg} // Corrected from 'isFormDisabled' in original text
-              onChange={() => handleCheck(todo.id, !todo.completed_flg)}
+              disabled={todo.delete_flg} // Checkbox disabled if task is in trash
+              checked={todo.completed_flg}
+              onChange={() => handleTodo(todo.id, 'completed_flg', !todo.completed_flg)}
             />
             <input
               type="text"
               value={todo.title}
-              disabled={todo.completed_flg} // Corrected from 'isFormDisabled' in original text
-              onChange={(e) => handleEdit(todo.id, e.target.value)}
+              disabled={todo.completed_flg || todo.delete_flg} // Text input disabled if completed or in trash
+              onChange={(e) => handleTodo(todo.id, 'title', e.target.value)}
             />
-            <button onClick={() => handleRemove(todo.id, !todo.delete_flg)}>
+            <button
+              className={todo.delete_flg ? 'restore-btn' : 'delete-btn'}
+              onClick={() => handleTodo(todo.id, 'delete_flg', !todo.delete_flg)}
+            >
               {todo.delete_flg ? 'Restore' : 'Delete'}
             </button>
           </li>
@@ -160,4 +186,4 @@ const Todos: React.FC = () => {
   );
 };
 
-export default Todos;
+export default Todo;

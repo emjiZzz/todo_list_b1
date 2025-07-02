@@ -1,28 +1,38 @@
-.top-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  min-height: 100vh;
+.top-container {
+  background-color: #e9ecef;
+  padding: 3em;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 600px;
+  margin: 3em auto;
   text-align: center;
+  box-sizing: border-box;
 }
 
-.top-page h1 {
-  margin-bottom: 1rem;
-  color: #333;
+.top-container h1 {
+  color: #343a40;
+  margin-bottom: 1.5em;
+  font-size: 2.5em;
 }
 
-.top-page button {
-  padding: 0.75em 1.5em;
-  font-size: 1.2em;
-  background-color: #007BFF;
-  color: #fff;
+.goto-todos-btn {
+  background-color: #007bff;
+  color: white;
+  padding: 1em 2em;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
+  font-size: 1.5em;
   cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: auto;
+  /* Override default button width */
+  max-width: 80%;
+  /* Limit button width */
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
 }
 
-.top-page button:hover {
+.goto-todos-btn:hover {
   background-color: #0056b3;
+  box-shadow: 0 6px 12px rgba(0, 123, 255, 0.3);
 }
