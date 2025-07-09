@@ -115,11 +115,6 @@ const Todos: React.FC = () => {
   };
 
   // Function to get the previous day date string
-  const getPreviousDayDate = (dateString: string) => {
-    const date = new Date(dateString);
-    date.setDate(date.getDate() - 1);
-    return format(date, 'yyyy-MM-dd');
-  };
 
   // Generic function to handle updates to a Todo item's properties
   // This replaces handleEdit, handleCheck, and handleRemove
