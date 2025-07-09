@@ -1,0 +1,42 @@
+[33mda27d43[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mtodo-b[m[33m)[m HEAD@{0}: reset: moving to HEAD
+[33mda27d43[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mtodo-b[m[33m)[m HEAD@{1}: checkout: moving from main to todo-b
+[33m138f65f[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{2}: pull origin main: Fast-forward
+[33m333df0c[m HEAD@{3}: checkout: moving from main to main
+[33m333df0c[m HEAD@{4}: reset: moving to HEAD
+[33m333df0c[m HEAD@{5}: checkout: moving from main to main
+[33m333df0c[m HEAD@{6}: checkout: moving from main to main
+[33m333df0c[m HEAD@{7}: checkout: moving from todo-b to main
+[33mda27d43[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mtodo-b[m[33m)[m HEAD@{8}: commit: Save changer before switching branches
+[33mbe4f512[m[33m ([m[1;32mfeature/fillter_function[m[33m)[m HEAD@{9}: checkout: moving from feature/fillter_function to todo-b
+[33mbe4f512[m[33m ([m[1;32mfeature/fillter_function[m[33m)[m HEAD@{10}: commit: Update Top.tsx with latest changes
+[33m3e391ee[m HEAD@{11}: checkout: moving from feature/fillter_function to feature/fillter_function
+[33m3e391ee[m HEAD@{12}: checkout: moving from feature/todo_list-cru to feature/fillter_function
+[33m19d309c[m[33m ([m[1;31morigin/feature/todo_list-index[m[33m, [m[1;31morigin/feature/todo_list-cru[m[33m, [m[1;32mfeature/todo_list-index[m[33m, [m[1;32mfeature/todo_list-cru[m[33m)[m HEAD@{13}: checkout: moving from feature/todo_list-cru to feature/todo_list-cru
+[33m19d309c[m[33m ([m[1;31morigin/feature/todo_list-index[m[33m, [m[1;31morigin/feature/todo_list-cru[m[33m, [m[1;32mfeature/todo_list-index[m[33m, [m[1;32mfeature/todo_list-cru[m[33m)[m HEAD@{14}: checkout: moving from feature/todo_list-cru to feature/todo_list-cru
+[33m19d309c[m[33m ([m[1;31morigin/feature/todo_list-index[m[33m, [m[1;31morigin/feature/todo_list-cru[m[33m, [m[1;32mfeature/todo_list-index[m[33m, [m[1;32mfeature/todo_list-cru[m[33m)[m HEAD@{15}: checkout: moving from feature/todo_list-cru to feature/todo_list-cru
+[33m19d309c[m[33m ([m[1;31morigin/feature/todo_list-index[m[33m, [m[1;31morigin/feature/todo_list-cru[m[33m, [m[1;32mfeature/todo_list-index[m[33m, [m[1;32mfeature/todo_list-cru[m[33m)[m HEAD@{16}: checkout: moving from main to feature/todo_list-cru
+[33m333df0c[m HEAD@{17}: commit (merge): Merge branch 'main' of https://github.com/emjiZzz/todo_list_b1
+[33m9fb58c3[m[33m ([m[1;31morigin/feature/route[m[33m, [m[1;31morigin/feature/local_db_insert[m[33m, [m[1;32mfeature/route[m[33m, [m[1;32mfeature/local_db_insert[m[33m)[m HEAD@{18}: Branch: renamed refs/heads/main to refs/heads/main
+[33m9fb58c3[m[33m ([m[1;31morigin/feature/route[m[33m, [m[1;31morigin/feature/local_db_insert[m[33m, [m[1;32mfeature/route[m[33m, [m[1;32mfeature/local_db_insert[m[33m)[m HEAD@{20}: Branch: renamed refs/heads/main to refs/heads/main
+[33m9fb58c3[m[33m ([m[1;31morigin/feature/route[m[33m, [m[1;31morigin/feature/local_db_insert[m[33m, [m[1;32mfeature/route[m[33m, [m[1;32mfeature/local_db_insert[m[33m)[m HEAD@{22}: checkout: moving from main to main
+[33m9fb58c3[m[33m ([m[1;31morigin/feature/route[m[33m, [m[1;31morigin/feature/local_db_insert[m[33m, [m[1;32mfeature/route[m[33m, [m[1;32mfeature/local_db_insert[m[33m)[m HEAD@{23}: merge feature/route: Fast-forward
+[33m3e391ee[m HEAD@{24}: checkout: moving from feature/route to main
+[33m9fb58c3[m[33m ([m[1;31morigin/feature/route[m[33m, [m[1;31morigin/feature/local_db_insert[m[33m, [m[1;32mfeature/route[m[33m, [m[1;32mfeature/local_db_insert[m[33m)[m HEAD@{25}: checkout: moving from feature/local_db_insert to feature/route
+[33m9fb58c3[m[33m ([m[1;31morigin/feature/route[m[33m, [m[1;31morigin/feature/local_db_insert[m[33m, [m[1;32mfeature/route[m[33m, [m[1;32mfeature/local_db_insert[m[33m)[m HEAD@{26}: commit: Finish feature/local_db_insert (Let's make a Todo app with React_6 completed)
+[33m3e391ee[m HEAD@{27}: checkout: moving from main to feature/local_db_insert
+[33m3e391ee[m HEAD@{28}: merge feature/fillter_function: Fast-forward
+[33m233779b[m[33m ([m[1;31morigin/feature/complated_delete_flg[m[33m, [m[1;32mfeature/complated_delete_flg[m[33m)[m HEAD@{29}: checkout: moving from feature/fillter_function to main
+[33m3e391ee[m HEAD@{30}: commit: Finish feature/fillter_function (Let's make a Todo app with React_4 completed)
+[33m233779b[m[33m ([m[1;31morigin/feature/complated_delete_flg[m[33m, [m[1;32mfeature/complated_delete_flg[m[33m)[m HEAD@{31}: checkout: moving from main to feature/fillter_function
+[33m233779b[m[33m ([m[1;31morigin/feature/complated_delete_flg[m[33m, [m[1;32mfeature/complated_delete_flg[m[33m)[m HEAD@{32}: merge feature/complated_delete_flg: Fast-forward
+[33m19d309c[m[33m ([m[1;31morigin/feature/todo_list-index[m[33m, [m[1;31morigin/feature/todo_list-cru[m[33m, [m[1;32mfeature/todo_list-index[m[33m, [m[1;32mfeature/todo_list-cru[m[33m)[m HEAD@{33}: checkout: moving from feature/complated_delete_flg to main
+[33m233779b[m[33m ([m[1;31morigin/feature/complated_delete_flg[m[33m, [m[1;32mfeature/complated_delete_flg[m[33m)[m HEAD@{34}: commit: Finish feature/complated_delete_flg(Let's make a Todo app with React_3 completed)
+[33m19d309c[m[33m ([m[1;31morigin/feature/todo_list-index[m[33m, [m[1;31morigin/feature/todo_list-cru[m[33m, [m[1;32mfeature/todo_list-index[m[33m, [m[1;32mfeature/todo_list-cru[m[33m)[m HEAD@{35}: checkout: moving from main to feature/complated_delete_flg
+[33m19d309c[m[33m ([m[1;31morigin/feature/todo_list-index[m[33m, [m[1;31morigin/feature/todo_list-cru[m[33m, [m[1;32mfeature/todo_list-index[m[33m, [m[1;32mfeature/todo_list-cru[m[33m)[m HEAD@{36}: merge feature/todo_list-cru: Fast-forward
+[33md4d0449[m HEAD@{37}: checkout: moving from feature/todo_list-cru to main
+[33m19d309c[m[33m ([m[1;31morigin/feature/todo_list-index[m[33m, [m[1;31morigin/feature/todo_list-cru[m[33m, [m[1;32mfeature/todo_list-index[m[33m, [m[1;32mfeature/todo_list-cru[m[33m)[m HEAD@{38}: checkout: moving from feature/todo_list-index to feature/todo_list-cru
+[33m19d309c[m[33m ([m[1;31morigin/feature/todo_list-index[m[33m, [m[1;31morigin/feature/todo_list-cru[m[33m, [m[1;32mfeature/todo_list-index[m[33m, [m[1;32mfeature/todo_list-cru[m[33m)[m HEAD@{39}: commit: Finish todo_list_cru (Let's make a Todo app with React_2 completed)
+[33md4d0449[m HEAD@{40}: checkout: moving from main to feature/todo_list-index
+[33md4d0449[m HEAD@{41}: Branch: renamed refs/heads/main to refs/heads/main
+[33md4d0449[m HEAD@{43}: Branch: renamed refs/heads/main to refs/heads/main
+[33md4d0449[m HEAD@{45}: commit (initial): first commit

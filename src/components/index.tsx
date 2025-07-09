@@ -1,184 +1,287 @@
+//tasks detail screen 
+
 import React, { useState, useEffect } from 'react';
 import localforage from 'localforage';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for routing
+import { format } from 'date-fns'; // date formatting utility
+import { useLocation, useNavigate } from 'react-router-dom'; // Import useNavigate for routing / location
+import '../index.css'; // reroute
 
-// Define the "Todo" type outside of the component.
-type Todo = {
+// Define the "Todo" type of the component
+// extended with new fields for task management
+export type Todo = {
   title: string;
   readonly id: number;
   completed_flg: boolean;
   delete_flg: boolean;
+  progress_rate: number; // completion percentage (0-100)
+  start_date: string; // task start date
+  scheduled_completion_date: string; // target completion date
+  improvements: string; // detailed notes and improvements
 };
 
 type Filter = 'all' | 'completed' | 'unchecked' | 'delete';
 
+// extract URL query parameters for date navigation
+function useQuery() {
+  return new URLSearchParams(useLocation().search); // added To call useLocation
+}
+
 // Define the Todo component
-const Todo: React.FC = () => {
+const Todos: React.FC = () => {
+  const query = useQuery(); // added Extracts the date query parameter
+  const queryDate = query.get('date'); // added State to store the list of todos
   const [todos, setTodos] = useState<Todo[]>([]); // State to hold the array of Todos.
   const [text, setText] = useState(''); // State for form input.
   const [nextId, setNextId] = useState(1); // State to hold the ID of the next Todo.
   const [filter, setFilter] = useState<Filter>('all'); // Filter state.
 
+  // handle date from URL or default to today
+  const [currentDate, setCurrentDate] = useState(() => {
+    if (queryDate) { // added If queryDate exists, parse it and set it as the initial date
+      const [y, m, d] = queryDate.split('-').map(Number);
+      return new Date(y, m - 1, d); // Month is 0-indexed in Date constructor
+    }
+    // set the initial date to the current day 
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  });
+
+  // track which accordion is open (only one at a time)
+  const [openAccordionId, setOpenAccordionId] = useState<number | null>(null);   // added Hook to programmatically navigate between routes
+
   const navigate = useNavigate(); // Get the navigation function
 
-  // useEffect Hook for initial logging (can be removed in production)
+  // load todos and filter state on mount
   useEffect(() => {
-    // Write side effect here
-    console.log('TODO!');
-  }, []); // Runs once on mount
+    localforage.getItem('todo-20240703').then((values) => {
+      if (values) {
+        setTodos(values as Todo[]);
+        // ensure nextId doesn't conflict with existing todos
+        const maxId = Math.max(...(values as Todo[]).map(todo => todo.id), 0);
+        setNextId(maxId + 1);
+      }
+    });
+    // remember filter selection between sessions
+    localforage.getItem('filterState-20240703').then((value) => {
+      if (value) setFilter(value as Filter);
+    });
+  }, []);
 
-  // Function to update the todos state (add new todo)
+  // save todos whenever they change
+  useEffect(() => {
+    localforage.setItem('todo-20240703', todos);
+  }, [todos]);
+
+  // save filter state whenever it changes
+  useEffect(() => {
+    localforage.setItem('filterState-20240703', filter);
+  }, [filter]);
+
+  // create new todo with validation
   const handleSubmit = () => {
-    if (!text) return; // Prevent adding empty todos
+    const trimmed = text.trim();
+    if (!trimmed) {
+      alert("Task cannot be empty.");
+      return;
+    }
     const newTodo: Todo = {
-      title: text,
+      title: trimmed,
       id: nextId,
       completed_flg: false,
       delete_flg: false,
+      progress_rate: 0,
+      start_date: format(currentDate, 'yyyy-MM-dd'),
+      scheduled_completion_date: format(currentDate, 'yyyy-MM-dd'),
+      improvements: '',
     };
-    setTodos((prevTodos) => [newTodo, ...prevTodos]); // Add new todo to the beginning of the list
-    setNextId(nextId + 1); // Increment ID for the next todo
-    setText(''); // Clear the input field
-  };
-
-  // Function to get filtered list of tasks.
-  const getFilteredTodos = () => {
-    switch (filter) {
-      case 'completed':
-        // Return tasks that are completed AND not deleted.
-        return todos.filter((todo) => todo.completed_flg && !todo.delete_flg);
-      case 'unchecked':
-        // Return tasks that are incomplete AND not deleted.
-        return todos.filter((todo) => !todo.completed_flg && !todo.delete_flg);
-      case 'delete':
-        // Return deleted tasks.
-        return todos.filter((todo) => todo.delete_flg);
-      default:
-        // Return all tasks that are not deleted.
-        return todos.filter((todo) => !todo.delete_flg);
-    }
+    // keep todos sorted by ID
+    setTodos(prev => [...prev, newTodo].sort((a, b) => a.id - b.id));
+    setNextId(nextId + 1);
+    setText('');
   };
 
   // Generic function to handle updates to a Todo item's properties
   // This replaces handleEdit, handleCheck, and handleRemove
-  const handleTodo = <K extends keyof Todo, V extends Todo[K]>(
-    id: number,
-    key: K,
-    value: V
-  ) => {
-    setTodos((todos) => {
-      const newTodos = todos.map((todo) => {
-        if (todo.id === id) {
-          return { ...todo, [key]: value };
-        } else {
-          return todo;
-        }
-      });
-      return newTodos;
-    });
+  // auto-complete logic when progress hits 100%
+  const handleTodo = <K extends keyof Todo, V extends Todo[K]>(id: number, key: K, value: V) => {
+    setTodos((todos) =>
+      todos.map((todo) => {
+        if (todo.id !== id) return todo;
+        const updated = { ...todo, [key]: value };
+        // mark as complete when progress reaches 100%
+        if (key === 'progress_rate' && value === 100) updated.completed_flg = true;
+        // reset progress when unchecking completion
+        if (key === 'completed_flg' && value === false) updated.progress_rate = 0;
+        return updated;
+      })
+    );
   };
 
-  const handleFilterChange = (selectedFilter: Filter) => {
-    setFilter(selectedFilter);
+  // Function to get filtered list of tasks.
+  // now includes date-based filtering
+  const getFilteredTodos = () => {
+    let resultTodos = [...todos];
+    const formatted = format(currentDate, 'yyyy-MM-dd');
+    const todayFormatted = format(new Date(), 'yyyy-MM-dd');
+
+    if (filter === 'completed') {
+      // Return tasks that are completed AND not deleted.
+      resultTodos = resultTodos.filter(
+        t => t.completed_flg && !t.delete_flg
+      );
+    } else if (filter === 'unchecked') {
+      // Return tasks that are incomplete AND not deleted.
+      // using progress_rate for more granular control
+      resultTodos = resultTodos.filter(
+        t => t.progress_rate < 100 && !t.delete_flg
+      );
+    } else if (filter === 'delete') {
+      // Return deleted tasks.
+      resultTodos = resultTodos.filter(t => t.delete_flg);
+    } else if (filter === 'all') {
+      // show all tasks for today, or date-specific tasks for other dates
+      if (formatted === todayFormatted) {
+        resultTodos = resultTodos.filter(t => !t.delete_flg);
+      } else {
+        resultTodos = resultTodos.filter(t => t.start_date === formatted && !t.delete_flg);
+      }
+    }
+
+    return resultTodos;
+  };
+
+  const handleFilterChange = (f: Filter) => {
+    setFilter(f);
+    // close accordion when switching filters
+    setOpenAccordionId(null);
   };
 
   // Function to physically delete tasks (empty trash)
   const handleEmpty = () => {
-    setTodos((todos) => todos.filter((todo) => !todo.delete_flg));
+    setTodos(todos.filter(t => !t.delete_flg));
+    setOpenAccordionId(null);
   };
 
-  // Use the useEffect hook to get data when the component mounts
-  useEffect(() => {
-    localforage.getItem('todo-20240622').then((values) => {
-      if (values) {
-        setTodos(values as Todo[]);
-        // Find the maximum ID from loaded todos to ensure nextId is unique
-        const maxId = Math.max(...(values as Todo[]).map(todo => todo.id), 0);
-        setNextId(maxId + 1);
-      }
-    }).catch(err => {
-      console.error("Error loading todos from localforage:", err);
-    });
-  }, []); // Empty dependency array means this runs once on mount.
+  // navigate to previous day
+  const handlePreviousDay = () => {
+    const newDate = new Date(currentDate);
+    newDate.setDate(currentDate.getDate() - 1);
+    setCurrentDate(newDate);
+    setFilter('all');
+    setOpenAccordionId(null);
+  };
 
-  // Use the useEffect hook to save data every time the todos state is updated.
-  useEffect(() => {
-    localforage.setItem('todo-20240622', todos).catch(err => {
-      console.error("Error saving todos to localforage:", err);
-    });
-  }, [todos]); // Runs whenever 'todos' state changes.
-
-  // Determine if the form (input and add button) should be disabled
-  const isFormDisabled = filter === 'completed' || filter === 'delete';
+  // navigate to next day
+  const handleNextDay = () => {
+    const newDate = new Date(currentDate);
+    newDate.setDate(currentDate.getDate() + 1);
+    setCurrentDate(newDate);
+    setFilter('all');
+    setOpenAccordionId(null);
+  };
 
   return (
     <div className="todo-container">
-      <button
-        className="back-button"
-        onClick={() => navigate('/')}
-        title="Back to Top Page"
-      >
-        ← Back
-      </button>
-      <select
-        defaultValue="all"
-        onChange={(e) => handleFilterChange(e.target.value as Filter)}
-      >
-        <option value="all">All tasks</option>
-        <option value="completed">Completed tasks</option>
-        <option value="unchecked">Current tasks</option>
-        <option value="delete">Trash</option>
-      </select>
+      {/* current date display */}
+      <div className="date-display-header">
+        {format(currentDate, 'MMMM d, yyyy').toUpperCase()}
+      </div>
+
+      {/* date navigation controls */}
+      <div className="date-navigation">
+        <button onClick={handlePreviousDay}>Last Day</button>
+        <button onClick={() => navigate('/')}>Back to Calendar</button>
+        <button onClick={handleNextDay}>Next Day</button>
+      </div>
+
+      <div className="all-tasks">
+        <select value={filter} onChange={(e) => handleFilterChange(e.target.value as Filter)}>
+          <option value="all">All Tasks</option>
+          <option value="completed">Completed Tasks</option>
+          <option value="unchecked">Current Tasks</option>
+          <option value="delete">Trash</option>
+        </select>
+      </div>
 
       {/* Show "Empty Trash" button when filter is `delete` */}
       {filter === 'delete' ? (
-        <button className="empty-trash-btn" onClick={handleEmpty}>
-          Empty Trash
-        </button>
-      ) : (
-        // Show Todo input form if filter is not `completed`
-        filter !== 'completed' && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSubmit();
-            }}
-          >
-            <input
-              type="text"
-              value={text} // Bind form input value to state
-              disabled={isFormDisabled} // Disable if form is disabled by filter
-              onChange={(e) => setText(e.target.value)} // Update state when input value changes
-              placeholder="Add a new todo..."
-            />
-            <button className="insert-btn" type="submit" disabled={isFormDisabled}>
-              Add
-            </button>
-          </form>
-        )
+        <button className="empty-trash-btn" onClick={handleEmpty}>Empty Trash</button>
+      ) : (filter === 'all' || filter === 'unchecked') && (
+        // Show Todo input form for appropriate filters
+        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+          <input type="text" value={text} onChange={(e) => setText(e.target.value)} placeholder="Add a new task..." />
+          <button className="insert-btn" type="submit">Add</button>
+        </form>
       )}
 
       <ul>
         {getFilteredTodos().map((todo) => (
           <li key={todo.id}>
-            <input
-              type="checkbox"
-              disabled={todo.delete_flg} // Checkbox disabled if task is in trash
-              checked={todo.completed_flg}
-              onChange={() => handleTodo(todo.id, 'completed_flg', !todo.completed_flg)}
-            />
-            <input
-              type="text"
-              value={todo.title}
-              disabled={todo.completed_flg || todo.delete_flg} // Text input disabled if completed or in trash
-              onChange={(e) => handleTodo(todo.id, 'title', e.target.value)}
-            />
-            <button
-              className={todo.delete_flg ? 'restore-btn' : 'delete-btn'}
-              onClick={() => handleTodo(todo.id, 'delete_flg', !todo.delete_flg)}
-            >
-              {todo.delete_flg ? 'Restore' : 'Delete'}
-            </button>
+            {/* main task row with all controls */}
+            <div className="task-row">
+              {/* progress percentage selector */}
+              <div className="progress-rate-section">
+                <label>Progress</label>
+                <select
+                  value={todo.progress_rate}
+                  onChange={(e) => handleTodo(todo.id, 'progress_rate', Number(e.target.value))}
+                  disabled={todo.completed_flg || todo.delete_flg}
+                >
+                  {[...Array(11).keys()].map(i => <option key={i} value={i * 10}>{i * 10}%</option>)}
+                </select>
+              </div>
+
+              {/* date inputs for start and completion */}
+              <div className="date-pickers-section">
+                <div className="date-input-group">
+                  <label>Start Date</label>
+                  <input
+                    type="date"
+                    value={todo.start_date}
+                    onChange={(e) => handleTodo(todo.id, 'start_date', e.target.value)}
+                    disabled={todo.completed_flg || todo.delete_flg}
+                  />
+                </div>
+                <div className="date-input-group">
+                  <label>Completion Date</label>
+                  <input
+                    type="date"
+                    value={todo.scheduled_completion_date}
+                    onChange={(e) => handleTodo(todo.id, 'scheduled_completion_date', e.target.value)}
+                    disabled={todo.completed_flg || todo.delete_flg}
+                  />
+                </div>
+              </div>
+
+              {/* task title input with completion styling */}
+              <div className="task-content-section">
+                <input
+                  type="text"
+                  value={todo.title}
+                  onChange={(e) => handleTodo(todo.id, 'title', e.target.value)}
+                  disabled={todo.progress_rate === 100}
+                  style={todo.progress_rate === 100 ? { backgroundColor: '#e0e0e0', color: '#666' } : {}}
+                />
+              </div>
+
+              {/* toggle accordion for detailed notes */}
+              <button className="edit-btn" onClick={() => setOpenAccordionId(openAccordionId === todo.id ? null : todo.id)}>Edit</button>
+
+              <button className={todo.delete_flg ? 'restore-btn' : 'delete-btn'} onClick={() => handleTodo(todo.id, 'delete_flg', !todo.delete_flg)}>
+                {todo.delete_flg ? 'Restore' : 'Delete'}
+              </button>
+            </div>
+
+            {/* expandable section for task details */}
+            {openAccordionId === todo.id && (
+              <div className="accordion-content">
+                <textarea
+                  value={todo.improvements}
+                  onChange={(e) => handleTodo(todo.id, 'improvements', e.target.value)}
+                  placeholder={`## Progress Status\n## Content\n## Background\n## Improvements`}
+                ></textarea>
+              </div>
+            )}
           </li>
         ))}
       </ul>
@@ -186,4 +289,4 @@ const Todo: React.FC = () => {
   );
 };
 
-export default Todo;
+export default Todos;

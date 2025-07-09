@@ -1,194 +1,369 @@
-/* Overall style */
+/* TODOS STYLE */
+
 body,
 html {
   height: 100%;
   width: 100%;
   margin: 0;
   font-family: 'Arial', sans-serif;
-  background-color: #f0f0f0;
-  /* Subtle gray background color */
+  background-color: #ffffff;
 }
 
 #root {
-  max-width: 1300px;
-  /* Increase max width */
+  max-width: 1000px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
 }
 
-.todo-container {
-  background-color: #d3d3d3;
+/*.todo-container {
+  background-color: #ffffff;
   padding: 2em;
   border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 10px rgb(255, 255, 255);
   width: 100%;
-  /* Set width to 100% */
   max-width: 1200px;
-  /* Set max width */
   margin: 1em auto;
-  /* Centered */
   box-sizing: border-box;
-  /* Includes padding and border */
-}
+}*/
 
-select,
-input[type='text'],
-button[type='submit'],
-.empty-trash-btn,
-.back-button,
-.goto-todos-btn {
-  width: 95%;
-  margin: 0.5em 0;
-  padding: 0.75em;
-  /* Increase padding */
-  font-size: 1.2em;
-  /* Increase font size */
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  box-sizing: border-box;
-  /* Ensures padding doesn't increase total width */
-}
 
+
+/* HOME BUTTON start here... */
 button[type='submit'],
-.empty-trash-btn,
-.back-button,
 .goto-todos-btn {
-  background-color: #007BFF;
+  background-color: orange;
   color: #fff;
   border: none;
   cursor: pointer;
-  height: 45px;
-  width: 35%;
-  /* Adjust width for buttons */
+  height: 50px;
+  width: 20%;
   font-size: 1.2em;
   padding: 0.5em 1em;
   display: inline-block;
-  /* For side-by-side or controlled width */
   text-align: center;
+  border-radius: 5px;
 }
 
-button[type='submit']:hover,
-.empty-trash-btn:hover,
-.back-button:hover,
-.goto-todos-btn:hover {
-  background-color: #0056b3;
+/* end here */
+
+
+
+/* LAST DAY, BACK TO CALENDAR AND NEXT DAY BUTTON */
+.date-navigation button {
+  background-color: orange;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 1em 1.5em;
+  font-size: 1em;
+  width: auto;
+  margin: 0 0.5em;
 }
 
+.date-navigation button:hover {
+  background-color: #ffc14a;
+}
+
+/* end here */
+
+
+
+/* ALL TASKS start here... */
+select {
+  width: 100%;
+  margin: 0.5em 0;
+  padding: 0.75em;
+  font-size: 1.2em;
+  border: 1px solid orange;
+  border-radius: 5px;
+  box-sizing: border-box;
+  display: block;
+}
+
+
+/* end here */
+
+
+
+/* INPUT TODO TASK start here... */
+.todo-container>form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  margin-bottom: 1em;
+  width: 100%;
+}
+
+.todo-container>form input[type='text'] {
+  width: 100%;
+  padding: 0.75em;
+  font-size: 1.2em;
+  border: 1px solid orange;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+/* end here */
+
+
+
+/* ADD BUTTON start here... */
+.todo-container>form .insert-btn {
+  width: 50%;
+  padding: 0.75em 1.5em;
+  height: 45px;
+  box-sizing: border-box;
+  margin: 0 auto;
+}
+
+button:hover {
+  background-color: #ffd580;
+}
+
+/* end here */
+
+
+
+/* TASK CONTAINER start here... */
 ul {
   list-style: none;
   padding: 0;
   width: 100%;
-  /* Set width to 100% */
 }
 
 li {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #f9f9f9;
-  /* Set background color to white */
+  flex-direction: column;
+  align-items: stretch;
+  background: #ffebe7;
   padding: 1em;
-  /* Increase padding */
   margin: 1em 0;
-  /* Increase margin */
   border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  /* Add list item shadow */
+  box-shadow: 0 0 5px rgb(255, 220, 220);
+  box-sizing: border-box;
   width: 100%;
-  /* Set width to 100% */
-  box-sizing: border-box;
-  /* Includes padding and border */
 }
 
-li input[type='text'] {
+/* end here */
+
+
+
+/* TASK ROW start here... */
+.task-row {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  align-items: center;
+}
+
+.progress-rate-section,
+.date-input-group,
+.task-content-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 1.5em;
+}
+
+.progress-rate-section select {
+  width: 80px;
+  padding: 0.3em;
+  font-size: 1em;
+}
+
+.date-pickers-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+.date-input-group input[type='date'] {
+  width: 130px;
+  padding: 0.3em;
+  font-size: 1em;
+}
+
+.task-content-section {
   flex-grow: 1;
-  margin-right: 1em;
-  border: 1px solid #ccc;
-  /* Add border */
-  border-radius: 5px;
-  /* Rounded border corners */
-  background: #fff;
-  /* Set background color to white */
-  outline: none;
-  font-size: 1.2em;
-  /* Increase font size */
+  min-width: 200px;
+}
+
+.task-content-section input[type='text'] {
+  width: 100%;
   padding: 0.5em;
-  /* Add padding */
-  box-sizing: border-box;
-  /* Include padding and border */
+  font-size: 1em;
 }
 
-li input[type='checkbox'] {
-  margin-right: 1em;
-  transform: scale(1.5);
-  /* Make the checkbox bigger */
-}
+/* end here */
 
+
+
+/* EDIT, DELETE AND RESTORE BUTTON start here... */
+li .edit-btn,
 li .delete-btn,
 li .restore-btn {
-  padding: 0.3em 0.6em;
-  background-color: #dc3545;
-  /* Red for delete */
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  width: 100px;
-  /* Fixed width for consistency */
+  margin-left: 0.5em;
+  margin-right: 0em;
+  padding: 0.3em 0.3em;
+  font-size: 1em;
+  width: 80px;
   text-align: center;
-  box-sizing: border-box;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
 }
 
-li .restore-btn {
-  background-color: #28a745;
-  /* Green for restore */
+li .edit-btn {
+  background-color: green;
+  color: #fff;
+}
+
+li .edit-btn:hover {
+  background-color: #00e600;
+}
+
+li .delete-btn {
+  background-color: red;
+  color: white;
 }
 
 li .delete-btn:hover {
-  background-color: #c82333;
+  background-color: #ff4d4d;
+}
+
+li .restore-btn {
+  background-color: red;
+  color: white;
 }
 
 li .restore-btn:hover {
-  background-color: #218838;
+  background-color: #ff4d4d;
+  ;
 }
 
 button[disabled] {
-  background-color: #ccc;
+  background-color: grey;
   cursor: not-allowed;
 }
 
-.back-button {
-  background-color: #6c757d;
-  /* Grey for back button */
-  width: 150px;
-  /* Specific width */
-  margin-bottom: 1em;
-  /* Space below */
-}
+/* end here */
 
-.back-button:hover {
-  background-color: #5a6268;
-}
 
+
+/* CLEAR RECYCLE BIN  BUTTON start...*/
 .empty-trash-btn {
-  background-color: #ffc107;
-  /* Orange for empty trash */
-  color: #343a40;
-  /* Dark text */
-  width: 150px;
-  /* Specific width */
+  background-color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 1em 1em;
+  width: auto;
+  margin: 0.05em;
+  font-size: 1em;
 }
 
 .empty-trash-btn:hover {
-  background-color: #e0a800;
+  background-color: rgb(219, 219, 219);
 }
 
-.insert-btn {
-  background-color: #28a745;
-  /* Green for Add button */
+/* end here */
+
+
+
+/* DATE DISPLAY TITLE */
+.date-display-header {
+  font-size: 2em;
+  font-weight: bold;
+  color: black;
+  margin: 0.5em;
+  text-align: center;
 }
 
-.insert-btn:hover {
-  background-color: #218838;
+.date-navigation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1em;
+  padding: 0.5em 0;
+  border-top: 1px solid #ccc;
 }
+
+/* end here */
+
+
+
+/* CALENDAR DISPLAY */
+.calendar-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.calendar-modal .fc {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 1000%;
+  max-height: 90%;
+  overflow: auto;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.calendar-header button {
+  background-color: #6c757d;
+  color: #fff;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.calendar-header button:hover {
+  background-color: #5a6268;
+}
+
+/* end here */
+
+
+
+/* ACCORDION TASK ROW */
+.accordion-content {
+  background-color: #fff0ed;
+  border-top: 1px solid #eee;
+  padding: 0;
+  margin-top: 1em;
+  width: 100%;
+  box-sizing: border-box;
+  display: block;
+}
+
+.accordion-content textarea {
+  width: 100%;
+  min-height: 120px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 0.95em;
+  font-family: 'Arial', sans-serif;
+  padding: 1em;
+  resize: vertical;
+  line-height: 1.6;
+  background-color: white;
+  color: #333;
+  box-sizing: border-box;
+}
+
+/* end here */
