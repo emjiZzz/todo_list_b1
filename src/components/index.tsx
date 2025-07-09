@@ -1,4 +1,4 @@
-//tasks detail screen
+//tasks detail screen 
 
 import React, { useState, useEffect } from 'react';
 import localforage from 'localforage';
@@ -14,53 +14,53 @@ export type Todo = {
   completed_flg: boolean;
   delete_flg: boolean;
   progress_rate: number; // completion percentage (0-100)
-  start_date: string; // task start date (e.g., 'YYYY-MM-DD')
-  scheduled_completion_date: string; // target completion date (e.g., 'YYYY-MM-DD')
+  start_date: string; // task start date
+  scheduled_completion_date: string; // target completion date
   improvements: string; // detailed notes and improvements
 };
 
 type Filter = 'all' | 'completed' | 'unchecked' | 'delete';
 
-// Utility function to check if a Date object is valid
-const isValidDate = (date: Date): boolean => {
-  return !isNaN(date.getTime());
-};
-
 // extract URL query parameters for date navigation
 function useQuery() {
-  return new URLSearchParams(useLocation().search);
+  return new URLSearchParams(useLocation().search); // added To call useLocation
 }
 
 // Define the Todo component
 const Todos: React.FC = () => {
-  const query = useQuery();
-  const queryDate = query.get('date');
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [text, setText] = useState('');
-  const [nextId, setNextId] = useState(1);
-  const [filter, setFilter] = useState<Filter>('all');
+  const query = useQuery(); // added Extracts the date query parameter
+  const queryDate = query.get('date'); // added State to store the list of todos
+  const [todos, setTodos] = useState<Todo[]>([]); // State to hold the array of Todos.
+  const [text, setText] = useState(''); // State for form input.
+  const [nextId, setNextId] = useState(1); // State to hold the ID of the next Todo.
+  const [filter, setFilter] = useState<Filter>('all'); // Filter state.
 
   // handle date from URL or default to today
-  const [currentDate, setCurrentDate] = useState<Date>(() => {
-    if (queryDate) {
-      const [y, m, d] = queryDate.split('-').map(Number);
-      // Validate year, month, day to ensure they are numbers
-      if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
-        const parsedDate = new Date(y, m - 1, d);
-        if (isValidDate(parsedDate)) {
-          return parsedDate;
+  const [currentDate, setCurrentDate] = useState(() => {
+    if (queryDate) { // added If queryDate exists, parse it and set it as the initial date
+      try {
+        const [y, m, d] = queryDate.split('-').map(Number);
+        // Validate the date components
+        if (y && m && d && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+          const date = new Date(y, m - 1, d); // Month is 0-indexed in Date constructor
+          // Check if the date is valid
+          if (date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d) {
+            return date;
+          }
         }
+      } catch (error) {
+        console.error('Invalid date format in URL:', queryDate);
       }
     }
-    // set the initial date to the current day if queryDate is invalid or not present
+    // set the initial date to the current day 
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), now.getDate());
   });
 
   // track which accordion is open (only one at a time)
-  const [openAccordionId, setOpenAccordionId] = useState<number | null>(null);
+  const [openAccordionId, setOpenAccordionId] = useState<number | null>(null);   // added Hook to programmatically navigate between routes
 
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Get the navigation function
 
   // load todos and filter state on mount
   useEffect(() => {
@@ -95,16 +95,14 @@ const Todos: React.FC = () => {
       alert("Task cannot be empty.");
       return;
     }
-    // Initialize dates to empty strings as per Todo type,
-    // but ensure they are handled safely later.
     const newTodo: Todo = {
       title: trimmed,
       id: nextId,
       completed_flg: false,
       delete_flg: false,
       progress_rate: 0,
-      start_date: '', // Will be updated by user input
-      scheduled_completion_date: '', // Will be updated by user input
+      start_date: '',
+      scheduled_completion_date: '',
       improvements: '',
     };
     // keep todos sorted by ID
@@ -114,41 +112,24 @@ const Todos: React.FC = () => {
   };
 
   // Date validation function
-  const validateDates = (startDateStr: string, completionDateStr: string) => {
-    // Only attempt to create Date objects if both strings are non-empty
-    if (!startDateStr || !completionDateStr) {
-      return true; // Or false, depending on your desired default validation for empty fields
-      // Assuming empty dates are 'valid' for initial state,
-      // but actual date comparison requires both to be set.
-    }
-    const start = new Date(startDateStr);
-    const completion = new Date(completionDateStr);
-
-    // Ensure both dates are valid before comparison
-    if (!isValidDate(start) || !isValidDate(completion)) {
-      console.warn("Attempted to validate dates with invalid string inputs:", startDateStr, completionDateStr);
-      return false; // Treat invalid date strings as a validation failure
-    }
-    return start.getTime() <= completion.getTime(); // Use getTime() for reliable comparison
+  const validateDates = (startDate: string, completionDate: string) => {
+    const start = new Date(startDate);
+    const completion = new Date(completionDate);
+    return start <= completion;
   };
 
   // Function to get the next day date string
   const getNextDayDate = (dateString: string) => {
-    if (!dateString) {
-      // If the input date string is empty, return an empty string or handle as appropriate
-      // Returning empty string to avoid creating an invalid date from new Date('')
-      return '';
-    }
     const date = new Date(dateString);
-    if (!isValidDate(date)) {
-      console.error("Invalid date string provided to getNextDayDate:", dateString);
-      return ''; // Return empty string if the provided date string is invalid
-    }
     date.setDate(date.getDate() + 1);
     return format(date, 'yyyy-MM-dd');
   };
 
+  // Function to get the previous day date string
+
   // Generic function to handle updates to a Todo item's properties
+  // This replaces handleEdit, handleCheck, and handleRemove
+  // auto-complete logic when progress hits 100%
   const handleTodo = <K extends keyof Todo, V extends Todo[K]>(id: number, key: K, value: V) => {
     setTodos((todos) =>
       todos.map((todo) => {
@@ -158,29 +139,15 @@ const Todos: React.FC = () => {
         // Date validation logic
         if (key === 'start_date') {
           const newStartDate = value as string;
-          // Only validate if newStartDate is not empty and a completion date exists
-          if (newStartDate && updated.scheduled_completion_date) {
-            if (!validateDates(newStartDate, updated.scheduled_completion_date)) {
-              alert("Start date must be before or on the completion date. Setting completion date to the day after start date.");
-              // Ensure getNextDayDate receives a valid date string
-              const tempDate = new Date(newStartDate);
-              if (isValidDate(tempDate)) {
-                updated.scheduled_completion_date = getNextDayDate(newStartDate);
-              } else {
-                console.error("New start date is invalid, cannot calculate next day:", newStartDate);
-                // Fallback if newStartDate itself is invalid
-                updated.scheduled_completion_date = '';
-              }
-            }
+          if (newStartDate && todo.scheduled_completion_date && !validateDates(newStartDate, todo.scheduled_completion_date)) {
+            alert("Start date must be before or on the completion date. Setting completion date to the day after start date.");
+            updated.scheduled_completion_date = getNextDayDate(newStartDate);
           }
         } else if (key === 'scheduled_completion_date') {
           const newCompletionDate = value as string;
-          // Only validate if newCompletionDate is not empty and a start date exists
-          if (newCompletionDate && updated.start_date) {
-            if (!validateDates(updated.start_date, newCompletionDate)) {
-              alert("Completion date must be after or on the start date. Please choose a date after the start date.");
-              return todo; // Return unchanged todo, preventing the update
-            }
+          if (newCompletionDate && todo.start_date && !validateDates(todo.start_date, newCompletionDate)) {
+            alert("Completion date must be after or on the start date. Please choose a date after the start date.");
+            return todo; // Return unchanged todo, preventing the update
           }
         }
 
@@ -197,26 +164,29 @@ const Todos: React.FC = () => {
   // now includes date-based filtering
   const getFilteredTodos = () => {
     let resultTodos = [...todos];
-    // Ensure currentDate is valid before formatting
-    const formatted = isValidDate(currentDate) ? format(currentDate, 'yyyy-MM-dd') : '';
-    const todayFormatted = format(new Date(), 'yyyy-MM-dd'); // This is usually safe
+    const formatted = format(currentDate, 'yyyy-MM-dd');
+    const todayFormatted = format(new Date(), 'yyyy-MM-dd');
 
     if (filter === 'completed') {
+      // Return tasks that are completed AND not deleted.
       resultTodos = resultTodos.filter(
         t => t.completed_flg && !t.delete_flg
       );
     } else if (filter === 'unchecked') {
+      // Return tasks that are incomplete AND not deleted.
+      // using progress_rate for more granular control
       resultTodos = resultTodos.filter(
         t => t.progress_rate < 100 && !t.delete_flg
       );
     } else if (filter === 'delete') {
+      // Return deleted tasks.
       resultTodos = resultTodos.filter(t => t.delete_flg);
     } else if (filter === 'all') {
+      // show all tasks for today, or date-specific tasks for other dates
       if (formatted === todayFormatted) {
         resultTodos = resultTodos.filter(t => !t.delete_flg);
       } else {
-        // Filter by start_date only if formatted date is valid (i.e., not empty)
-        resultTodos = resultTodos.filter(t => formatted && t.start_date === formatted && !t.delete_flg);
+        resultTodos = resultTodos.filter(t => t.start_date === formatted && !t.delete_flg);
       }
     }
 
@@ -225,6 +195,7 @@ const Todos: React.FC = () => {
 
   const handleFilterChange = (f: Filter) => {
     setFilter(f);
+    // close accordion when switching filters
     setOpenAccordionId(null);
   };
 
@@ -249,11 +220,7 @@ const Todos: React.FC = () => {
   // navigate to previous day
   const handlePreviousDay = () => {
     const newDate = new Date(currentDate);
-    if (!isValidDate(newDate)) { // Defensive check
-      console.error("Current date is invalid, cannot navigate to previous day.");
-      return;
-    }
-    newDate.setDate(newDate.getDate() - 1);
+    newDate.setDate(currentDate.getDate() - 1);
     setCurrentDate(newDate);
     setFilter('all');
     setOpenAccordionId(null);
@@ -262,11 +229,7 @@ const Todos: React.FC = () => {
   // navigate to next day
   const handleNextDay = () => {
     const newDate = new Date(currentDate);
-    if (!isValidDate(newDate)) { // Defensive check
-      console.error("Current date is invalid, cannot navigate to next day.");
-      return;
-    }
-    newDate.setDate(newDate.getDate() + 1);
+    newDate.setDate(currentDate.getDate() + 1);
     setCurrentDate(newDate);
     setFilter('all');
     setOpenAccordionId(null);
@@ -276,8 +239,7 @@ const Todos: React.FC = () => {
     <div className="todo-container">
       {/* current date display */}
       <div className="date-display-header">
-        {/* Only format if currentDate is valid, otherwise display a placeholder */}
-        {isValidDate(currentDate) ? format(currentDate, 'MMMM d, yyyy').toUpperCase() : 'Invalid Date'}
+        {format(currentDate, 'MMMM d, yyyy').toUpperCase()}
       </div>
 
       {/* date navigation controls */}
