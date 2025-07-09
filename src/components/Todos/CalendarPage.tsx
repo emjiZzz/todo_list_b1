@@ -24,18 +24,6 @@ const CalendarPage: React.FC = () => {
   }, []);
 
   // check if a given date falls within a task's start and end date range
-  const isDateInTaskPeriod = (date: string, task: Todo): boolean => {
-    const checkDate = new Date(date);
-    const startDate = new Date(task.start_date);
-    const endDate = new Date(task.scheduled_completion_date);
-
-    // normalize all dates to start of day to avoid timezone issues
-    checkDate.setHours(0, 0, 0, 0);
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setHours(0, 0, 0, 0);
-
-    return checkDate >= startDate && checkDate <= endDate;
-  };
 
   // create calendar events from todos for FullCalendar display
   const generateCalendarEvents = () => {
@@ -45,7 +33,6 @@ const CalendarPage: React.FC = () => {
     todos
       .filter((t) => !t.delete_flg && !t.completed_flg)
       .forEach((task) => {
-        const startDate = new Date(task.start_date);
         const endDate = new Date(task.scheduled_completion_date);
 
         // create spanning event for the entire task duration
