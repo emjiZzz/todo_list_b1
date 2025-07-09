@@ -90,14 +90,35 @@ const Todos: React.FC = () => {
       completed_flg: false,
       delete_flg: false,
       progress_rate: 0,
-      start_date: format(currentDate, 'yyyy-MM-dd'),
-      scheduled_completion_date: format(currentDate, 'yyyy-MM-dd'),
+      start_date: '',
+      scheduled_completion_date: '',
       improvements: '',
     };
     // keep todos sorted by ID
     setTodos(prev => [...prev, newTodo].sort((a, b) => a.id - b.id));
     setNextId(nextId + 1);
     setText('');
+  };
+
+  // Date validation function
+  const validateDates = (startDate: string, completionDate: string) => {
+    const start = new Date(startDate);
+    const completion = new Date(completionDate);
+    return start <= completion;
+  };
+
+  // Function to get the next day date string
+  const getNextDayDate = (dateString: string) => {
+    const date = new Date(dateString);
+    date.setDate(date.getDate() + 1);
+    return format(date, 'yyyy-MM-dd');
+  };
+
+  // Function to get the previous day date string
+  const getPreviousDayDate = (dateString: string) => {
+    const date = new Date(dateString);
+    date.setDate(date.getDate() - 1);
+    return format(date, 'yyyy-MM-dd');
   };
 
   // Generic function to handle updates to a Todo item's properties
@@ -107,7 +128,23 @@ const Todos: React.FC = () => {
     setTodos((todos) =>
       todos.map((todo) => {
         if (todo.id !== id) return todo;
-        const updated = { ...todo, [key]: value };
+        let updated = { ...todo, [key]: value };
+
+        // Date validation logic
+        if (key === 'start_date') {
+          const newStartDate = value as string;
+          if (newStartDate && todo.scheduled_completion_date && !validateDates(newStartDate, todo.scheduled_completion_date)) {
+            alert("Start date must be before or on the completion date. Setting completion date to the day after start date.");
+            updated.scheduled_completion_date = getNextDayDate(newStartDate);
+          }
+        } else if (key === 'scheduled_completion_date') {
+          const newCompletionDate = value as string;
+          if (newCompletionDate && todo.start_date && !validateDates(todo.start_date, newCompletionDate)) {
+            alert("Completion date must be after or on the start date. Setting start date to the day before completion date.");
+            updated.start_date = getPreviousDayDate(newCompletionDate);
+          }
+        }
+
         // mark as complete when progress reaches 100%
         if (key === 'progress_rate' && value === 100) updated.completed_flg = true;
         // reset progress when unchecking completion
