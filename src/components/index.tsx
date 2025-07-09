@@ -140,8 +140,8 @@ const Todos: React.FC = () => {
         } else if (key === 'scheduled_completion_date') {
           const newCompletionDate = value as string;
           if (newCompletionDate && todo.start_date && !validateDates(todo.start_date, newCompletionDate)) {
-            alert("Completion date must be after or on the start date. Setting start date to the day before completion date.");
-            updated.start_date = getPreviousDayDate(newCompletionDate);
+            alert("Completion date must be after or on the start date. Please choose a date after the start date.");
+            return todo; // Return unchanged todo, preventing the update
           }
         }
 
