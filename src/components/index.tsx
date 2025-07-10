@@ -194,6 +194,18 @@ const Todos: React.FC = () => {
     setOpenAccordionId(null);
   };
 
+  // Function to handle back to calendar navigation with validation
+  const handleBackToCalendar = () => {
+    const incompleteTasks = todos.filter(t => !t.delete_flg && (!t.start_date || !t.scheduled_completion_date));
+
+    if (incompleteTasks.length > 0) {
+      alert("Please set start date and completion date for all tasks before going back to calendar.");
+      return;
+    }
+
+    navigate('/');
+  };
+
   // navigate to previous day
   const handlePreviousDay = () => {
     const newDate = new Date(currentDate);
@@ -222,7 +234,7 @@ const Todos: React.FC = () => {
       {/* date navigation controls */}
       <div className="date-navigation">
         <button onClick={handlePreviousDay}>Last Day</button>
-        <button onClick={() => navigate('/')}>Back to Calendar</button>
+        <button onClick={handleBackToCalendar}>Back to Calendar</button>
         <button onClick={handleNextDay}>Next Day</button>
       </div>
 
