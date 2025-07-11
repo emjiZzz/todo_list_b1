@@ -95,14 +95,18 @@ const Todos: React.FC = () => {
       alert("Task cannot be empty.");
       return;
     }
+
+    // Get today's date in YYYY-MM-DD format
+    const today = format(new Date(), 'yyyy-MM-dd');
+
     const newTodo: Todo = {
       title: trimmed,
       id: nextId,
       completed_flg: false,
       delete_flg: false,
       progress_rate: 0,
-      start_date: '',
-      scheduled_completion_date: '',
+      start_date: today,
+      scheduled_completion_date: today,
       improvements: '',
     };
     // keep todos sorted by ID
@@ -205,15 +209,8 @@ const Todos: React.FC = () => {
     setOpenAccordionId(null);
   };
 
-  // Function to handle back to calendar navigation with validation
+  // Function to handle back to calendar navigation
   const handleBackToCalendar = () => {
-    const incompleteTasks = todos.filter(t => !t.delete_flg && (!t.start_date || !t.scheduled_completion_date));
-
-    if (incompleteTasks.length > 0) {
-      alert("Please set start date and completion date for all tasks before going back to calendar.");
-      return;
-    }
-
     navigate('/');
   };
 
