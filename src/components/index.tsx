@@ -96,8 +96,8 @@ const Todos: React.FC = () => {
       return;
     }
 
-    // Get today's date in YYYY-MM-DD format
-    const today = format(new Date(), 'yyyy-MM-dd');
+    // Get the currently selected date in YYYY-MM-DD format
+    const selectedDate = format(currentDate, 'yyyy-MM-dd');
 
     const newTodo: Todo = {
       title: trimmed,
@@ -105,8 +105,8 @@ const Todos: React.FC = () => {
       completed_flg: false,
       delete_flg: false,
       progress_rate: 0,
-      start_date: today,
-      scheduled_completion_date: today,
+      start_date: selectedDate,
+      scheduled_completion_date: selectedDate,
       improvements: '',
     };
     // keep todos sorted by ID
