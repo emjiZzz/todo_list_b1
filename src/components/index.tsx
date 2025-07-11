@@ -158,7 +158,8 @@ const Todos: React.FC = () => {
         // mark as complete when progress reaches 100%
         if (key === 'progress_rate' && value === 100) updated.completed_flg = true;
         // mark as incomplete when progress is reduced below 100%
-        if (key === 'progress_rate' && value < 100) updated.completed_flg = false;
+        // Fix: Added `typeof value === 'number'` to check the type before comparing.
+        if (key === 'progress_rate' && typeof value === 'number' && value < 100) updated.completed_flg = false;
         // reset progress when unchecking completion
         if (key === 'completed_flg' && value === false) updated.progress_rate = 0;
         return updated;
