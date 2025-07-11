@@ -157,6 +157,8 @@ const Todos: React.FC = () => {
 
         // mark as complete when progress reaches 100%
         if (key === 'progress_rate' && value === 100) updated.completed_flg = true;
+        // mark as incomplete when progress is reduced below 100%
+        if (key === 'progress_rate' && value < 100) updated.completed_flg = false;
         // reset progress when unchecking completion
         if (key === 'completed_flg' && value === false) updated.progress_rate = 0;
         return updated;
@@ -277,7 +279,7 @@ const Todos: React.FC = () => {
                 <select
                   value={todo.progress_rate}
                   onChange={(e) => handleTodo(todo.id, 'progress_rate', Number(e.target.value))}
-                  disabled={todo.completed_flg || todo.delete_flg}
+                  disabled={todo.delete_flg}
                 >
                   {[...Array(11).keys()].map(i => <option key={i} value={i * 10}>{i * 10}%</option>)}
                 </select>
