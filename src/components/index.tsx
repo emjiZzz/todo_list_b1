@@ -38,8 +38,19 @@ const Todos: React.FC = () => {
   // handle date from URL or default to today
   const [currentDate, setCurrentDate] = useState(() => {
     if (queryDate) { // added If queryDate exists, parse it and set it as the initial date
-      const [y, m, d] = queryDate.split('-').map(Number);
-      return new Date(y, m - 1, d); // Month is 0-indexed in Date constructor
+      try {
+        const [y, m, d] = queryDate.split('-').map(Number);
+        // Validate the date components
+        if (y && m && d && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+          const date = new Date(y, m - 1, d); // Month is 0-indexed in Date constructor
+          // Check if the date is valid
+          if (date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d) {
+            return date;
+          }
+        }
+      } catch (error) {
+        console.error('Invalid date format in URL:', queryDate);
+      }
     }
     // set the initial date to the current day 
     const now = new Date();
@@ -84,14 +95,18 @@ const Todos: React.FC = () => {
       alert("Task cannot be empty.");
       return;
     }
+
+    // Get the currently selected date in YYYY-MM-DD format
+    const selectedDate = format(currentDate, 'yyyy-MM-dd');
+
     const newTodo: Todo = {
       title: trimmed,
       id: nextId,
       completed_flg: false,
       delete_flg: false,
       progress_rate: 0,
-      start_date: '',
-      scheduled_completion_date: '',
+      start_date: selectedDate,
+      scheduled_completion_date: selectedDate,
       improvements: '',
     };
     // keep todos sorted by ID
@@ -142,6 +157,9 @@ const Todos: React.FC = () => {
 
         // mark as complete when progress reaches 100%
         if (key === 'progress_rate' && value === 100) updated.completed_flg = true;
+        // mark as incomplete when progress is reduced below 100%
+        // Fix: Added `typeof value === 'number'` to check the type before comparing.
+        if (key === 'progress_rate' && typeof value === 'number' && value < 100) updated.completed_flg = false;
         // reset progress when unchecking completion
         if (key === 'completed_flg' && value === false) updated.progress_rate = 0;
         return updated;
@@ -194,15 +212,8 @@ const Todos: React.FC = () => {
     setOpenAccordionId(null);
   };
 
-  // Function to handle back to calendar navigation with validation
+  // Function to handle back to calendar navigation
   const handleBackToCalendar = () => {
-    const incompleteTasks = todos.filter(t => !t.delete_flg && (!t.start_date || !t.scheduled_completion_date));
-
-    if (incompleteTasks.length > 0) {
-      alert("Please set start date and completion date for all tasks before going back to calendar.");
-      return;
-    }
-
     navigate('/');
   };
 
@@ -269,7 +280,7 @@ const Todos: React.FC = () => {
                 <select
                   value={todo.progress_rate}
                   onChange={(e) => handleTodo(todo.id, 'progress_rate', Number(e.target.value))}
-                  disabled={todo.completed_flg || todo.delete_flg}
+                  disabled={todo.delete_flg}
                 >
                   {[...Array(11).keys()].map(i => <option key={i} value={i * 10}>{i * 10}%</option>)}
                 </select>
