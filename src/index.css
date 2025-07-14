@@ -366,40 +366,4 @@ button[disabled] {
   box-sizing: border-box;
 }
 
-.markdown-display-btn {
-  background-color: orange;
-  color: white;
-  border: 1px solid blue;
-  border-radius: 5px;
-  cursor: pointer;
-  padding: 0.5em 1em;
-  font-size: 1em;
-  width: auto;
-  float: left;
-  margin-top: 10px;
-}
-
-.date-navigation button:hover {
-  background-color: #ffc14a;
-  border-color: blue;
-}
-
-.close-btn {
-  background-color: #f44336;
-  color: white;
-  border-radius: none;
-  cursor: pointer;
-  padding: 0.5em 1.5em;
-  font-size: 1em;
-  width: auto;
-  float: left;
-  margin-left: 0.5em;
-  margin-right: 0;/
-}
-
-.close-btn:hover {
-  background-color: #d32f2f;
-}
-
-
 /* end here */
