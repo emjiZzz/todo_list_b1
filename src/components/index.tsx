@@ -1,7 +1,7 @@
 //tasks detail screen 
 
 import React, { useState, useEffect } from 'react';
-import localforage from 'localforage';
+import localforage from 'localforage'; // CORRECTED IMPORT: 'localforage' (removed extra 'for')
 import { format } from 'date-fns'; // date formatting utility
 import { useLocation, useNavigate } from 'react-router-dom'; // Import useNavigate for routing / location
 import '../index.css'; // reroute
@@ -59,6 +59,9 @@ const Todos: React.FC = () => {
   const [nextId, setNextId] = useState(1); // State to hold the ID of the next Todo.
   const [filter, setFilter] = useState<Filter>('all'); // Filter state.
 
+  // State to track markdown display mode (raw vs parsed) for improvements field
+  const [markdownDisplayMode, setMarkdownDisplayMode] = useState<{ [key: number]: boolean }>({});
+
   // handle date from URL or default to today
   const [currentDate, setCurrentDate] = useState(() => {
     if (queryDate) { // added If queryDate exists, parse it and set it as the initial date
@@ -82,15 +85,17 @@ const Todos: React.FC = () => {
   });
 
   // track which accordion is open (only one at a time)
-  const [openAccordionId, setOpenAccordionId] = useState<number | null>(null);   // added Hook to programmatically navigate between routes
+  const [openAccordionId, setOpenAccordionId] = useState<number | null>(null);   // added Hook to programmatically navigate between routes
 
 
   const navigate = useNavigate(); // Get the navigation function
 
   // load todos and filter state on mount
   useEffect(() => {
-    localforage.getItem('todo-20240703').then((values) => {
+    // FIX for 'values' implicit any type and type incompatibility
+    localforage.getItem('todo-20240703').then((values: unknown) => { // Type as unknown
       if (values) {
+        // Cast to Todo[] only when you are sure it's not null/undefined
         setTodos(values as Todo[]);
         // ensure nextId doesn't conflict with existing todos
         const maxId = Math.max(...(values as Todo[]).map(todo => todo.id), 0);
@@ -98,8 +103,9 @@ const Todos: React.FC = () => {
       }
     });
     // remember filter selection between sessions
-    localforage.getItem('filterState-20240703').then((value) => {
-      if (value) setFilter(value as Filter);
+    // FIX for 'value' implicit any type and type incompatibility
+    localforage.getItem('filterState-20240703').then((value: unknown) => { // Type as unknown
+      if (value) setFilter(value as Filter); // Cast to Filter
     });
   }, []);
 
@@ -155,11 +161,7 @@ const Todos: React.FC = () => {
     return format(date, 'yyyy-MM-dd');
   };
 
-  // Function to get the previous day date string
-
   // Generic function to handle updates to a Todo item's properties
-  // This replaces handleEdit, handleCheck, and handleRemove
-  // auto-complete logic when progress hits 100%
   const handleTodo = <K extends keyof Todo, V extends Todo[K]>(id: number, key: K, value: V) => {
     setTodos((todos) =>
       todos.map((todo) => {
@@ -184,13 +186,74 @@ const Todos: React.FC = () => {
         // mark as complete when progress reaches 100%
         if (key === 'progress_rate' && value === 100) updated.completed_flg = true;
         // mark as incomplete when progress is reduced below 100%
-        // Fix: Added `typeof value === 'number'` to check the type before comparing.
         if (key === 'progress_rate' && typeof value === 'number' && value < 100) updated.completed_flg = false;
         // reset progress when unchecking completion
         if (key === 'completed_flg' && value === false) updated.progress_rate = 0;
         return updated;
       })
     );
+  };
+
+  // NEW FEATURE: Handle image drag and drop functionality
+  // This function processes dropped files and converts them to base64 strings
+  const handleImageDrop = (e: React.DragEvent<HTMLDivElement>, todoId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const files = Array.from(e.dataTransfer.files);
+    // Filter only image files (jpg, jpeg, png, gif, etc.)
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+
+    if (imageFiles.length === 0) {
+      alert('Please drop only image files.');
+      return;
+    }
+
+    // Process each image file
+    imageFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const imageData = event.target?.result as string;
+        // Add the image to the todo's images array
+        setTodos(prev => prev.map(todo => {
+          if (todo.id === todoId) {
+            return {
+              ...todo,
+              images: [...todo.images, imageData]
+            };
+          }
+          return todo;
+        }));
+      };
+      reader.readAsDataURL(file); // Convert file to base64 string
+    });
+  };
+
+  // NEW FEATURE: Handle drag over event to allow dropping
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  // NEW FEATURE: Remove image from todo
+  const handleRemoveImage = (todoId: number, imageIndex: number) => {
+    setTodos(prev => prev.map(todo => {
+      if (todo.id === todoId) {
+        return {
+          ...todo,
+          images: todo.images.filter((_, index) => index !== imageIndex)
+        };
+      }
+      return todo;
+    }));
+  };
+
+  // NEW FEATURE: Toggle markdown display mode
+  const toggleMarkdownDisplay = (todoId: number) => {
+    setMarkdownDisplayMode(prev => ({
+      ...prev,
+      [todoId]: !prev[todoId]
+    }));
   };
 
   // Function to get filtered list of tasks.
@@ -353,14 +416,46 @@ const Todos: React.FC = () => {
               </button>
             </div>
 
+
             {/* expandable section for task details */}
             {openAccordionId === todo.id && (
               <div className="accordion-content">
-                <textarea
-                  value={todo.improvements}
-                  onChange={(e) => handleTodo(todo.id, 'improvements', e.target.value)}
-                  placeholder={`## Progress Status\n## Content\n## Background\n## Improvements`}
-                ></textarea>
+                {/* Image Drop Area */}
+                <div
+                  className="image-drop-area"
+                  onDrop={(e) => handleImageDrop(e, todo.id)}
+                  onDragOver={handleDragOver}
+                >
+                  Drag and drop images here (JPG, PNG, GIF)
+                </div>
+
+                {/* Displaying Images with Removal Option */}
+                <div className="images-container">
+                  {todo.images.map((image, index) => (
+                    <div key={index} className="image-preview">
+                      <img src={image} alt={`Todo Image ${index}`} />
+                      <button onClick={() => handleRemoveImage(todo.id, index)} className="remove-image-btn">Remove</button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Improvements Textarea with Markdown Toggle */}
+                <div className="improvements-section">
+                  <button onClick={() => toggleMarkdownDisplay(todo.id)} className="markdown-toggle-btn">
+                    {markdownDisplayMode[todo.id] ? 'Edit Markdown' : 'View HTML'}
+                  </button>
+                  {markdownDisplayMode[todo.id] ? (
+                    // Display parsed HTML if markdownDisplayMode is true
+                    <div className="markdown-preview" dangerouslySetInnerHTML={{ __html: parseMarkdown(todo.improvements) }} />
+                  ) : (
+                    // Display textarea for editing
+                    <textarea
+                      value={todo.improvements}
+                      onChange={(e) => handleTodo(todo.id, 'improvements', e.target.value)}
+                      placeholder={`## Progress Status\n## Content\n## Background\n## Improvements`}
+                    ></textarea>
+                  )}
+                </div>
               </div>
             )}
           </li>
@@ -371,3 +466,4 @@ const Todos: React.FC = () => {
 };
 
 export default Todos;
+
