@@ -17,8 +17,6 @@ export type Todo = {
   start_date: string; // task start date
   scheduled_completion_date: string; // target completion date
   improvements: string; // detailed notes and improvements
-  // NEW FEATURES: Add image support for drag and drop functionality
-  images: string[]; // Array to store base64 encoded images
 };
 
 type Filter = 'all' | 'completed' | 'unchecked' | 'delete';
@@ -110,7 +108,6 @@ const Todos: React.FC = () => {
       start_date: selectedDate,
       scheduled_completion_date: selectedDate,
       improvements: '',
-      images: []
     };
     // keep todos sorted by ID
     setTodos(prev => [...prev, newTodo].sort((a, b) => a.id - b.id));
