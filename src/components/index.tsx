@@ -28,6 +28,28 @@ function useQuery() {
   return new URLSearchParams(useLocation().search); // added To call useLocation
 }
 
+// NEW FEATURE: Simple markdown parser function
+// This function converts basic markdown syntax to HTML
+export const parseMarkdown = (text: string): string => {
+  if (!text) return '';
+
+  // Convert markdown to HTML with basic syntax support
+  return text
+    .replace(/\*\*([^*]+)\*\*|__([^_]+)__/g, '<strong>$1$2</strong>')
+    .replace(/\*([^*]+)\*|_([^_]+)_/g, '<em>$1$2</em>')
+    .replace(/~~(.*?)~~/g, '<del>$1</del>')
+    .replace(/```(.*?)```/gs, '<pre><code>$1</code></pre>')
+    .replace(/`(.*?)`/g, '<code>$1</code>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+    .replace(/^### (.*)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.*)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.*)$/gm, '<h1>$1</h1>')
+    .replace(/---/g, '<hr>')
+    .replace(/\n/g, '<br>');
+};
+
+
+
 // Define the Todo component
 const Todos: React.FC = () => {
   const query = useQuery(); // added Extracts the date query parameter
@@ -61,6 +83,7 @@ const Todos: React.FC = () => {
 
   // track which accordion is open (only one at a time)
   const [openAccordionId, setOpenAccordionId] = useState<number | null>(null);   // added Hook to programmatically navigate between routes
+
 
   const navigate = useNavigate(); // Get the navigation function
 
