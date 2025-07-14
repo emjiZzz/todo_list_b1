@@ -21,67 +21,10 @@ export type Todo = {
 
 type Filter = 'all' | 'completed' | 'unchecked' | 'delete';
 
-// 🔽 New Feature: Markdown Display - View mode type
-type ViewMode = 'normal' | 'markdown';
-
 // extract URL query parameters for date navigation
 function useQuery() {
   return new URLSearchParams(useLocation().search); // added To call useLocation
 }
-
-// 🔽 New Feature: Markdown Display - Markdown renderer component
-const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
-  const renderMarkdown = (text: string) => {
-    let html = text;
-
-    // Replace headings
-    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-
-    // Replace bold text
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-
-    // Replace italic text
-    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-
-    // Replace strikethrough
-    html = html.replace(/~~(.+?)~~/g, '<del>$1</del>');
-
-    // Replace blockquotes
-    html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
-
-    // Replace horizontal rules
-    html = html.replace(/^---$/gm, '<hr>');
-
-    // Replace code blocks
-    html = html.replace(/`(.+?)`/g, '<code>$1</code>');
-
-    // Replace links
-    html = html.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank">$1</a>');
-
-    // Replace images
-    html = html.replace(/!\[(.+?)\]\((.+?)\)/g, '<img src="$2" alt="$1" style="max-width: 100%; height: auto; margin: 10px 0;">');
-
-    // Replace bullet lists
-    html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
-    html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
-
-    // Replace checkboxes
-    html = html.replace(/^- \[x\] (.+)$/gm, '<li><input type="checkbox" checked disabled> $1</li>');
-    html = html.replace(/^- \[ \] (.+)$/gm, '<li><input type="checkbox" disabled> $1</li>');
-
-    // Replace line breaks
-    html = html.replace(/\n/g, '<br>');
-
-    return { __html: html };
-  };
-
-  return (
-    <div
-      className="markdown-content"
-      dangerouslySetInnerHTML={renderMarkdown(content)}
-    />
-  );
-};
 
 // Define the Todo component
 const Todos: React.FC = () => {
@@ -116,13 +59,6 @@ const Todos: React.FC = () => {
 
   // track which accordion is open (only one at a time)
   const [openAccordionId, setOpenAccordionId] = useState<number | null>(null);   // added Hook to programmatically navigate between routes
-
-  // 🔽 New Feature: Markdown Display - State for view mode and current markdown content
-  const [viewMode, setViewMode] = useState<ViewMode>('normal');
-  const [markdownContent, setMarkdownContent] = useState('');
-
-  // 🔽 New Feature: D&D Image Upload - State for drag and drop
-  const [dragActive, setDragActive] = useState(false);
 
   const navigate = useNavigate(); // Get the navigation function
 
@@ -299,99 +235,6 @@ const Todos: React.FC = () => {
     setOpenAccordionId(null);
   };
 
-  // 🔽 New Feature: Markdown Display - Function to show markdown view
-  const handleMarkdownDisplay = (content: string) => {
-    setMarkdownContent(content);
-    setViewMode('markdown');
-  };
-
-  // 🔽 New Feature: Markdown Display - Function to go back to normal view
-  const handleBackToNormal = () => {
-    setViewMode('normal');
-    setMarkdownContent('');
-  };
-
-  // 🔽 New Feature: D&D Image Upload - Function to convert file to base64
-  const convertFileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
-    });
-  };
-
-  // 🔽 New Feature: D&D Image Upload - Function to handle image upload
-  const handleImageUpload = async (file: File, todoId: number) => {
-    try {
-      const base64String = await convertFileToBase64(file);
-      const imageMarkdown = `![image](${base64String})`;
-
-      // Find the current todo and append the image markdown to improvements
-      const currentTodo = todos.find(t => t.id === todoId);
-      if (currentTodo) {
-        const updatedImprovements = currentTodo.improvements + '\n' + imageMarkdown;
-        handleTodo(todoId, 'improvements', updatedImprovements);
-      }
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      alert('Error uploading image. Please try again.');
-    }
-  };
-
-  // 🔽 New Feature: D&D Image Upload - Drag and drop handlers
-  const handleDragEnter = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (e: React.DragEvent, todoId: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-
-    const files = e.dataTransfer.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      if (file.type.startsWith('image/')) {
-        handleImageUpload(file, todoId);
-      } else {
-        alert('Please upload only image files.');
-      }
-    }
-  };
-
-  // 🔽 New Feature: Markdown Display - Render markdown view when in markdown mode
-  if (viewMode === 'markdown') {
-    return (
-      <div className="markdown-view-container">
-        <div className="markdown-view-header">
-
-        </div>
-        <div className="markdown-view-content">
-          <MarkdownRenderer content={markdownContent} />
-        </div>
-        <div className="markdown-view-footer">
-          <button className="close-btn" onClick={handleBackToNormal}>
-            Close
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="todo-container">
       {/* current date display */}
@@ -487,36 +330,11 @@ const Todos: React.FC = () => {
             {/* expandable section for task details */}
             {openAccordionId === todo.id && (
               <div className="accordion-content">
-                {/* 🔽 New Feature: D&D Image Upload - Drag and drop area for textarea */}
-                <div
-                  className={`textarea-container ${dragActive ? 'drag-active' : ''}`}
-                  onDragEnter={handleDragEnter}
-                  onDragLeave={handleDragLeave}
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => handleDrop(e, todo.id)}
-                >
-                  <textarea
-                    value={todo.improvements}
-                    onChange={(e) => handleTodo(todo.id, 'improvements', e.target.value)}
-                    placeholder={`## Progress Status\n## Content\n## Background\n## Improvements\n\nDrag & drop images here to upload!`}
-                  />
-                  {/* 🔽 New Feature: D&D Image Upload - Visual feedback for drag state */}
-                  {dragActive && (
-                    <div className="drag-overlay">
-                      <div className="drag-message">Drop image here!</div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 🔽 New Feature: Markdown Display - Markdown Display button */}
-                <div className="accordion-actions">
-                  <button
-                    className="markdown-display-btn"
-                    onClick={() => handleMarkdownDisplay(todo.improvements)}
-                  >
-                    Markdown Display
-                  </button>
-                </div>
+                <textarea
+                  value={todo.improvements}
+                  onChange={(e) => handleTodo(todo.id, 'improvements', e.target.value)}
+                  placeholder={`## Progress Status\n## Content\n## Background\n## Improvements`}
+                ></textarea>
               </div>
             )}
           </li>
