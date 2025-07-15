@@ -106,6 +106,7 @@ select {
   box-sizing: border-box;
 }
 
+
 /* end here */
 
 
@@ -364,6 +365,118 @@ button[disabled] {
   background-color: white;
   color: #333;
   box-sizing: border-box;
+}
+
+.calendar-search-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.calendar-search-input {
+  width: 220px;
+  padding: 0.5em 1em;
+  font-size: 1em;
+  border: 1px solid orange;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px orange;
+  outline: none;
+  transition: border 0.2s ease-in-out;
+}
+
+.calendar-search-input:focus {
+  border-color: rgb(0, 102, 255);
+}
+
+/*Search warning message styling */
+.search-warning {
+  color: red;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.markdown-toggle-btn {
+  background-color: #ffa500;
+  font-size: 1em;
+  border: none;
+  padding: 0.5em 1.5em;
+  margin-top: 0.5em;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  float: left;
+  border: 2px solid rgb(0, 102, 255);
+}
+
+.markdown-toggle-btn:hover {
+  background-color: #e69500;
+}
+
+.markdown-preview {
+  background-color: #fff;
+  padding: 1rem;
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.markdown-preview img {
+  max-width: 100%;
+  margin-top: 1rem;
+  border-radius: 6px;
+}
+
+.markdown-preview h1,
+.markdown-preview h2,
+.markdown-preview h3 {
+  margin-top: 1em;
+}
+
+.markdown-preview blockquote {
+  border-left: 4px solid #ccc;
+  padding-left: 1em;
+  color: #555;
+}
+
+.markdown-preview code {
+  background: #f4f4f4;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+}
+
+.markdown-preview pre {
+  background: #f4f4f4;
+  padding: 1em;
+  overflow: auto;
+  border-radius: 6px;
+  margin-top: 1rem;
+}
+
+.markdown-preview {
+  background-color: #fff;
+  padding: 1rem;
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+  text-align: left;
+}
+
+/* MARKDOWN DISPLAY BACK BUTTON */
+.back-red-btn {
+  background-color: red;
+  color: white;
+  font-size: 1em;
+  border: none;
+  padding: 0.5em 1.5em;
+  margin-top: 1em;
+  border-radius: 5px;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.back-red-btn:hover {
+  background-color: #cc0000;
 }
 
 /* end here */
