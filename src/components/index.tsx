@@ -4,7 +4,9 @@ import React, { useState, useEffect } from 'react';
 import localforage from 'localforage';
 import { format } from 'date-fns'; // date formatting utility
 import { useLocation, useNavigate } from 'react-router-dom'; // Import useNavigate for routing / location
-import '../index.css'; // reroute
+import '../index.css';
+import ReactMarkdown from 'react-markdown'; // NF TODO A 
+import remarkGfm from 'remark-gfm'; // NF TODO A 
 
 // Define the "Todo" type of the component
 // extended with new fields for task management
@@ -13,18 +15,75 @@ export type Todo = {
   readonly id: number;
   completed_flg: boolean;
   delete_flg: boolean;
-  progress_rate: number; // completion percentage (0-100)
-  start_date: string; // task start date
-  scheduled_completion_date: string; // target completion date
-  improvements: string; // detailed notes and improvements
+  progress_rate: number;
+  start_date: string;
+  scheduled_completion_date: string;
+  improvements: string;
+  images?: { [key: string]: string }; // NF TODO A Store image URLs by filename
 };
 
 type Filter = 'all' | 'completed' | 'unchecked' | 'delete';
 
-// extract URL query parameters for date navigation
 function useQuery() {
-  return new URLSearchParams(useLocation().search); // added To call useLocation
+  return new URLSearchParams(useLocation().search);
 }
+
+// NF TODO A  MARKDOWN FUNCTIONALITY
+const MarkdownPreviewPage: React.FC<{ id: string; onBack: () => void }> = ({ id, onBack }) => {
+  const [markdown, setMarkdown] = useState('');
+  const [todo, setTodo] = useState<Todo | null>(null);
+
+  useEffect(() => {
+    localforage.getItem('todo-20240703').then((data) => {
+      if (data) {
+        const todos = data as Todo[];
+        const found = todos.find((t) => String(t.id) === id);
+        if (found) {
+          setTodo(found);
+          setMarkdown(found.improvements || '');
+        } else {
+          setMarkdown('# Task not found');
+        }
+      }
+    });
+  }, [id]);
+
+  return (
+    <div className="markdown-preview">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          img: ({ node, src, alt, ...props }) => {
+            // If it's a local image reference, use the stored URL
+            if (src && todo?.images && todo.images[src]) {
+              return (
+                <img
+                  {...props}
+                  src={todo.images[src]}
+                  alt={alt || "Image"}
+                  style={{ maxWidth: '100%', height: 'auto' }}
+                />
+              );
+            }
+            // Otherwise use the src as-is
+            return (
+              <img
+                {...props}
+                src={src}
+                alt={alt || "Image"}
+                style={{ maxWidth: '100%', height: 'auto' }}
+              />
+            );
+          },
+        }}
+      >
+
+        {markdown}
+      </ReactMarkdown>
+      <button className="back-red-btn" onClick={onBack}>Back</button>
+    </div>
+  );
+};
 
 // Define the Todo component
 const Todos: React.FC = () => {
@@ -34,6 +93,7 @@ const Todos: React.FC = () => {
   const [text, setText] = useState(''); // State for form input.
   const [nextId, setNextId] = useState(1); // State to hold the ID of the next Todo.
   const [filter, setFilter] = useState<Filter>('all'); // Filter state.
+  const [showMarkdownId, setShowMarkdownId] = useState<string | null>(null); // NF TODO A
 
   // handle date from URL or default to today
   const [currentDate, setCurrentDate] = useState(() => {
@@ -42,7 +102,7 @@ const Todos: React.FC = () => {
         const [y, m, d] = queryDate.split('-').map(Number);
         // Validate the date components
         if (y && m && d && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
-          const date = new Date(y, m - 1, d); // Month is 0-indexed in Date constructor
+          const date = new Date(y, m - 1, d);  // Month is 0-indexed in Date constructor
           // Check if the date is valid
           if (date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d) {
             return date;
@@ -58,9 +118,8 @@ const Todos: React.FC = () => {
   });
 
   // track which accordion is open (only one at a time)
-  const [openAccordionId, setOpenAccordionId] = useState<number | null>(null);   // added Hook to programmatically navigate between routes
-
-  const navigate = useNavigate(); // Get the navigation function
+  const [openAccordionId, setOpenAccordionId] = useState<number | null>(null);
+  const navigate = useNavigate();
 
   // load todos and filter state on mount
   useEffect(() => {
@@ -108,6 +167,7 @@ const Todos: React.FC = () => {
       start_date: selectedDate,
       scheduled_completion_date: selectedDate,
       improvements: '',
+      images: {}, // NF TODO A for D&D image 
     };
     // keep todos sorted by ID
     setTodos(prev => [...prev, newTodo].sort((a, b) => a.id - b.id));
@@ -151,10 +211,9 @@ const Todos: React.FC = () => {
           const newCompletionDate = value as string;
           if (newCompletionDate && todo.start_date && !validateDates(todo.start_date, newCompletionDate)) {
             alert("Completion date must be after or on the start date. Please choose a date after the start date.");
-            return todo; // Return unchanged todo, preventing the update
+            return todo;// Return unchanged todo, preventing the update
           }
         }
-
         // mark as complete when progress reaches 100%
         if (key === 'progress_rate' && value === 100) updated.completed_flg = true;
         // mark as incomplete when progress is reduced below 100%
@@ -173,18 +232,13 @@ const Todos: React.FC = () => {
     let resultTodos = [...todos];
     const formatted = format(currentDate, 'yyyy-MM-dd');
     const todayFormatted = format(new Date(), 'yyyy-MM-dd');
-
     if (filter === 'completed') {
       // Return tasks that are completed AND not deleted.
-      resultTodos = resultTodos.filter(
-        t => t.completed_flg && !t.delete_flg
-      );
+      resultTodos = resultTodos.filter(t => t.completed_flg && !t.delete_flg);
     } else if (filter === 'unchecked') {
       // Return tasks that are incomplete AND not deleted.
       // using progress_rate for more granular control
-      resultTodos = resultTodos.filter(
-        t => t.progress_rate < 100 && !t.delete_flg
-      );
+      resultTodos = resultTodos.filter(t => t.progress_rate < 100 && !t.delete_flg);
     } else if (filter === 'delete') {
       // Return deleted tasks.
       resultTodos = resultTodos.filter(t => t.delete_flg);
@@ -196,7 +250,6 @@ const Todos: React.FC = () => {
         resultTodos = resultTodos.filter(t => t.start_date === formatted && !t.delete_flg);
       }
     }
-
     return resultTodos;
   };
 
@@ -217,7 +270,7 @@ const Todos: React.FC = () => {
     navigate('/');
   };
 
-  // navigate to previous day
+  // navigate to previous da
   const handlePreviousDay = () => {
     const newDate = new Date(currentDate);
     newDate.setDate(currentDate.getDate() - 1);
@@ -234,6 +287,37 @@ const Todos: React.FC = () => {
     setFilter('all');
     setOpenAccordionId(null);
   };
+
+  // NF TODO A handle image D&D 
+  const handleImageDrop = (e: React.DragEvent<HTMLTextAreaElement>, todoId: number) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (!file || !file.type.startsWith("image/")) return;
+
+    // Create object URL for the file
+    const imageUrl = URL.createObjectURL(file);
+    const imageKey = `${file.name}-${Date.now()}`;
+    const markdown = `\n\n![${file.name}](${imageKey})\n\n`;
+
+    setTodos(prevTodos =>
+      prevTodos.map((t) => {
+        if (t.id !== todoId) return t;
+        return {
+          ...t,
+          improvements: t.improvements + markdown,
+          images: {
+            ...t.images,
+            [imageKey]: imageUrl
+          }
+        };
+      })
+    );
+  };
+
+  if (showMarkdownId) {
+    return <MarkdownPreviewPage id={showMarkdownId} onBack={() => setShowMarkdownId(null)} />;
+  }
+
 
   return (
     <div className="todo-container">
@@ -262,7 +346,6 @@ const Todos: React.FC = () => {
       {filter === 'delete' ? (
         <button className="empty-trash-btn" onClick={handleEmpty}>Empty Trash</button>
       ) : (filter === 'all' || filter === 'unchecked') && (
-        // Show Todo input form for appropriate filters
         <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
           <input type="text" value={text} onChange={(e) => setText(e.target.value)} placeholder="Add a new task..." />
           <button className="insert-btn" type="submit">Add</button>
@@ -321,7 +404,6 @@ const Todos: React.FC = () => {
 
               {/* toggle accordion for detailed notes */}
               <button className="edit-btn" onClick={() => setOpenAccordionId(openAccordionId === todo.id ? null : todo.id)}>Edit</button>
-
               <button className={todo.delete_flg ? 'restore-btn' : 'delete-btn'} onClick={() => handleTodo(todo.id, 'delete_flg', !todo.delete_flg)}>
                 {todo.delete_flg ? 'Restore' : 'Delete'}
               </button>
@@ -334,7 +416,16 @@ const Todos: React.FC = () => {
                   value={todo.improvements}
                   onChange={(e) => handleTodo(todo.id, 'improvements', e.target.value)}
                   placeholder={`## Progress Status\n## Content\n## Background\n## Improvements`}
+                  onDrop={(e) => handleImageDrop(e, todo.id)}
+                  onDragOver={(e) => e.preventDefault()}
                 ></textarea>
+
+                <button
+                  className="markdown-toggle-btn"
+                  onClick={() => setShowMarkdownId(String(todo.id))}
+                >
+                  Markdown Display
+                </button>
               </div>
             )}
           </li>
