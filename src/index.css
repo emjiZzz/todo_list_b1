@@ -413,50 +413,16 @@ button[disabled] {
   background-color: #e69500;
 }
 
-.markdown-preview {
-  background-color: #fff;
-  padding: 1rem;
-  border: 1px dashed #ccc;
-  border-radius: 8px;
-  margin-top: 0.5rem;
-}
-
 .markdown-preview img {
   max-width: 100%;
   margin-top: 1rem;
   border-radius: 6px;
 }
 
-.markdown-preview h1,
-.markdown-preview h2,
-.markdown-preview h3 {
-  margin-top: 1em;
-}
-
-.markdown-preview blockquote {
-  border-left: 4px solid #ccc;
-  padding-left: 1em;
-  color: #555;
-}
-
-.markdown-preview code {
-  background: #f4f4f4;
-  padding: 0.2em 0.4em;
-  border-radius: 3px;
-}
-
-.markdown-preview pre {
-  background: #f4f4f4;
-  padding: 1em;
-  overflow: auto;
-  border-radius: 6px;
-  margin-top: 1rem;
-}
-
 .markdown-preview {
   background-color: #fff;
   padding: 1rem;
-  border: 1px dashed #ccc;
+  border: 1px dashed orange;
   border-radius: 8px;
   margin-top: 0.5rem;
   text-align: left;
