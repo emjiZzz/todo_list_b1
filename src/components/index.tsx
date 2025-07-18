@@ -384,7 +384,7 @@ const Todos: React.FC = () => {
     setOpenAccordionId(null);
   };
 
-  // FIXED: Enhanced image drag and drop function to handle all image types
+  // FIXED NF TODO A: Enhanced image drag and drop function to handle all image types
   const handleImageDrop = (e: React.DragEvent<HTMLTextAreaElement>, todoId: number) => {
     e.preventDefault();
 
@@ -398,7 +398,7 @@ const Todos: React.FC = () => {
         return true;
       }
 
-      // Fallback: check file extension for common image formats
+      // NF TODO A Fallback : check file extension for common image formats
       const fileName = file.name.toLowerCase();
       const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.ico', '.tiff', '.tif'];
       return imageExtensions.some(ext => fileName.endsWith(ext));
@@ -421,14 +421,11 @@ const Todos: React.FC = () => {
         // Create markdown for the image
         const markdown = `\n\n![${file.name}](${imageKey})\n\n`;
 
-        // Update the todo with the new image
         setTodos(prevTodos =>
           prevTodos.map((t) => {
             if (t.id !== todoId) return t;
-
-            // Ensure images object exists
             const currentImages = t.images || {};
-
+            
             return {
               ...t,
               improvements: t.improvements + markdown,
