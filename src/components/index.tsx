@@ -205,7 +205,7 @@ const MarkdownPreviewPage: React.FC<{ id: string; onBack: () => void }> = ({ id,
 };
 
 
-// ➤ NEW: Function to check for duplicate task titles (case-insensitive, trimmed)
+// NF TODO A Function to check for duplicate task titles (case-insensitive, trimmed)
 // This function helps us prevent users from adding the same task title twice.
 const isDuplicateTitle = (todos: Todo[], newTitle: string): boolean => {
   return todos.some(todo => todo.title.trim().toLowerCase() === newTitle.trim().toLowerCase());
