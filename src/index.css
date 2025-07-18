@@ -460,6 +460,7 @@ button[disabled] {
 }
 
 /* end here */
+
 /* MARKDOWN PREVIEW PAGE STYLES */
 .markdown-preview-page {
   background-color: white;
@@ -469,13 +470,9 @@ button[disabled] {
   color: #333;
   line-height: 1.5;
   text-align: left;
-  /* <-- Force text alignment left */
   margin: 0;
-  /* <-- Remove centering */
   max-width: none;
-  /* <-- Prevent fixed width */
   width: 100%;
-  /* <-- Full width */
   box-sizing: border-box;
 }
 
