@@ -42,45 +42,168 @@ const MarkdownPreviewPage: React.FC<{ id: string; onBack: () => void }> = ({ id,
           setTodo(found);
           setMarkdown(found.improvements || '');
         } else {
-          setMarkdown('# Task not found');
+          setMarkdown('**Task not found**');
         }
       }
     });
   }, [id]);
 
+  // FIXED: Function to handle checkbox toggle in markdown
+  const handleCheckboxChange = (checkboxIndex: number) => {
+    const lines = markdown.split('\n');
+    let currentCheckboxIndex = 0;
+
+    const updatedLines = lines.map(line => {
+      if (line.includes('- [') || line.includes('- [x]')) {
+        if (currentCheckboxIndex === checkboxIndex) {
+          if (line.includes('- [x]')) {
+            currentCheckboxIndex++;
+            return line.replace('- [x]', '- [ ]');
+          } else if (line.includes('- [ ]')) {
+            currentCheckboxIndex++;
+            return line.replace('- [ ]', '- [x]');
+          }
+        }
+        currentCheckboxIndex++;
+      }
+      return line;
+    });
+
+    const updatedMarkdown = updatedLines.join('\n');
+    setMarkdown(updatedMarkdown);
+
+    // Update the todo in storage
+    if (todo) {
+      const updatedTodo = { ...todo, improvements: updatedMarkdown };
+      localforage.getItem('todo-20240703').then((data) => {
+        if (data) {
+          const todos = data as Todo[];
+          const updatedTodos = todos.map(t => t.id === todo.id ? updatedTodo : t);
+          localforage.setItem('todo-20240703', updatedTodos);
+        }
+      });
+    }
+  };
+
+  // > NF TODO A  tASK TITLE MARKDOWN DISPLAY
   return (
-    <div className="markdown-preview">
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        components={{
-          img: ({ node, src, alt, ...props }) => {
-            if (src && todo?.images && todo.images[src]) {
+    <div className="markdown-preview-page">
+      <div className="markdown-preview-content">
+        {todo && (
+          <p className="markdown-task-title">
+            {todo.title}
+          </p>
+        )}
+
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            img: ({ node, src, alt, ...props }) => {
+              if (src && todo?.images && todo.images[src]) {
+                return (
+                  <img
+                    {...props}
+                    src={todo.images[src]}
+                    alt={alt || 'Image'}
+                    className="markdown-image"
+                  />
+                );
+              }
               return (
                 <img
                   {...props}
-                  src={todo.images[src]}
-                  alt={alt || "Image"}
-                  style={{ maxWidth: '100%', height: 'auto' }}
+                  src={src}
+                  alt={alt || 'Image'}
+                  className="markdown-image"
                 />
               );
+            },
+
+            // FIXED: NF TODO A LIST ITEM MARKDOWN DISPLAY bullet, checkbox - consistent styling
+            li: ({ node, children, ...props }) => {
+              const className = (props as any).className || '';
+              const isTaskItem = className.includes('task-list-item');
+              return (
+                <li
+                  {...props}
+                  className={`markdown-list-item ${isTaskItem ? 'task-list-item' : ''}`}
+                >
+                  <div className="markdown-list-content">
+                    {!isTaskItem && (
+                      <span className="markdown-bullet">
+                        •
+                      </span>
+                    )}
+                    <div className="markdown-list-text">
+                      {children}
+                    </div>
+                  </div>
+                </li>
+              );
+            },
+
+            // FIXED: NF TODO A LIST ITEM MARKDOWN DISPLAY checkbox - functional toggle
+            input: ({ node, ...props }) => {
+              if (props.type === 'checkbox') {
+                // Get the checkbox index from the markdown
+                const checkboxIndex = (() => {
+                  const lines = markdown.split('\n');
+                  let index = 0;
+                  for (let i = 0; i < lines.length; i++) {
+                    if (lines[i].includes('- [') || lines[i].includes('- [x]')) {
+                      // This is a simplified approach - you might need to adjust based on your specific use case
+                      if (lines[i].includes(props.checked ? '- [x]' : '- [ ]')) {
+                        return index;
+                      }
+                      index++;
+                    }
+                  }
+                  return index;
+                })();
+
+                return (
+                  <input
+                    {...props}
+                    className="markdown-checkbox"
+                    disabled={false}
+                    onChange={() => handleCheckboxChange(checkboxIndex)}
+                  />
+                );
+              }
+              return <input {...props} />;
+            },
+
+            ul: ({ node, children, ...props }) => {
+              return (
+                <ul
+                  {...props}
+                  className="markdown-unordered-list"
+                >
+                  {children}
+                </ul>
+              );
+            },
+            ol: ({ node, children, ...props }) => {
+
+              return (
+                <ol
+                  {...props}
+                  className="markdown-ordered-list"
+                >
+                  {children}
+                </ol>
+              );
             }
-            return (
-              <img
-                {...props}
-                src={src}
-                alt={alt || "Image"}
-                style={{ maxWidth: '100%', height: 'auto' }}
-              />
-            );
-          },
-        }}
-      >
-        {markdown}
-      </ReactMarkdown>
+          }}
+        >
+          {markdown}
+        </ReactMarkdown>
+      </div>
       <button className="back-red-btn" onClick={onBack}>Back</button>
-    </div>
+    </div >
   );
 };
+
 
 // ➤ NEW: Function to check for duplicate task titles (case-insensitive, trimmed)
 // This function helps us prevent users from adding the same task title twice.
@@ -147,7 +270,7 @@ const Todos: React.FC = () => {
       return;
     }
 
-    // ➤ NEW: Check if the task title already exists
+    // NEW F: Check if the task title already exists
     if (isDuplicateTitle(todos, trimmed)) {
       alert("Task with the same title already exists.");
       return;
@@ -261,28 +384,66 @@ const Todos: React.FC = () => {
     setOpenAccordionId(null);
   };
 
+  // FIXED: Enhanced image drag and drop function to handle all image types
   const handleImageDrop = (e: React.DragEvent<HTMLTextAreaElement>, todoId: number) => {
     e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (!file || !file.type.startsWith("image/")) return;
 
-    const imageUrl = URL.createObjectURL(file);
-    const imageKey = `${file.name}-${Date.now()}`;
-    const markdown = `\n\n![${file.name}](${imageKey})\n\n`;
+    // Get all files from the drop event
+    const files = Array.from(e.dataTransfer.files);
 
-    setTodos(prevTodos =>
-      prevTodos.map((t) => {
-        if (t.id !== todoId) return t;
-        return {
-          ...t,
-          improvements: t.improvements + markdown,
-          images: {
-            ...t.images,
-            [imageKey]: imageUrl
-          }
-        };
-      })
-    );
+    // Filter for image files with comprehensive image type checking
+    const imageFiles = files.filter(file => {
+      // Check MIME type first
+      if (file.type.startsWith("image/")) {
+        return true;
+      }
+
+      // Fallback: check file extension for common image formats
+      const fileName = file.name.toLowerCase();
+      const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.ico', '.tiff', '.tif'];
+      return imageExtensions.some(ext => fileName.endsWith(ext));
+    });
+
+    if (imageFiles.length === 0) {
+      alert("Please drop valid image files only.");
+      return;
+    }
+
+    // Process each image file
+    imageFiles.forEach(file => {
+      try {
+        // Create object URL for the image
+        const imageUrl = URL.createObjectURL(file);
+
+        // Generate unique key for the image
+        const imageKey = `${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+        // Create markdown for the image
+        const markdown = `\n\n![${file.name}](${imageKey})\n\n`;
+
+        // Update the todo with the new image
+        setTodos(prevTodos =>
+          prevTodos.map((t) => {
+            if (t.id !== todoId) return t;
+
+            // Ensure images object exists
+            const currentImages = t.images || {};
+
+            return {
+              ...t,
+              improvements: t.improvements + markdown,
+              images: {
+                ...currentImages,
+                [imageKey]: imageUrl
+              }
+            };
+          })
+        );
+      } catch (error) {
+        console.error('Error processing image file:', file.name, error);
+        alert(`Error processing image: ${file.name}`);
+      }
+    });
   };
 
   if (showMarkdownId) {
