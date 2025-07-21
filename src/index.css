@@ -521,7 +521,7 @@ button[disabled] {
   background: none !important;
 }
 
-/* UPDATED: List content - clean styling without boxes */
+/* UPDATED: List content */
 .markdown-list-content {
   display: flex;
   align-items: flex-start;
@@ -531,31 +531,39 @@ button[disabled] {
   border: none !important;
   padding: 0;
   margin: 0;
+  line-height: 1.5;
+
 }
 
-/* UPDATED: Bullet styling - clean and simple */
+
+/* UPDATED: Bullet styling */
 .markdown-bullet {
   width: 16px;
   height: 16px;
   display: inline-block;
   font-size: 16px;
-  line-height: 1;
-  text-align: left;
+  line-height: 1.5;
+  * Match the line-height of the text */ text-align: left;
   color: #333;
   font-weight: normal;
   margin-top: 0;
+  padding-top: 0;
+  vertical-align: top;
+  /* Align to top baseline */
   flex-shrink: 0;
   background: none !important;
   border: none !important;
 }
 
-/* List text */
+/* UPDATED: List text */
 .markdown-list-text {
   flex: 1;
   background: none !important;
   border: none !important;
   padding: 0;
   margin: 0;
+  line-height: 1.5;
+  /* Match bullet line height */
 }
 
 /* UPDATED: Hide checkboxes completely for task lists */
