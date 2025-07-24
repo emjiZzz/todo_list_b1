@@ -1,20 +1,19 @@
-// FILE: src/components/Todos/CalendarPage.tsx
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import localforage from 'localforage';
-import { type Todo } from "../index"; // Fixed import
+import { type Todo } from "../index";
 import '../../index.css';
 
 const CalendarPage: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
-  const [currentDate] = useState(new Date());
+  const [searchTerm, setSearchTerm] = useState(""); // ADDED FEATURE
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const calendarRef = useRef<any>(null);
   const navigate = useNavigate();
 
-  // load todos from local storage on component mount
   useEffect(() => {
     localforage.getItem('todo-20240703').then((values) => {
       if (values) {
@@ -23,51 +22,73 @@ const CalendarPage: React.FC = () => {
     });
   }, []);
 
-  // check if a given date falls within a task's start and end date range
+  const fuzzyMatch = (text: string, search: string) => {
+    return text.toLowerCase().includes(search.toLowerCase());
+  };
 
-  // create calendar events from todos for FullCalendar display
+  const matchedTodos = todos.filter(
+    (t) => !t.delete_flg && !t.completed_flg && fuzzyMatch(t.title, searchTerm)
+  );
+
+  // ADDED FEATURE Auto-jump to month of first matched task
+  useEffect(() => {
+    if (!searchTerm.trim()) return;
+
+    const firstMatch = matchedTodos[0];
+    if (firstMatch && calendarRef.current) {
+      calendarRef.current.getApi().gotoDate(firstMatch.start_date);
+    }
+  }, [searchTerm, todos]);
+
   const generateCalendarEvents = () => {
-    const events: any[] = [];
-
-    // only show active (not deleted or completed) tasks
-    todos
-      .filter((t) => !t.delete_flg && !t.completed_flg)
-      .forEach((task) => {
-        const endDate = new Date(task.scheduled_completion_date);
-
-        // create spanning event for the entire task duration
-        events.push({
-          id: String(task.id),
-          title: task.title,
-          start: task.start_date,
-          // add 1 day to end date for inclusive range (FullCalendar needs exclusive end)
-          end: new Date(endDate.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          allDay: true,
-          color: '#007BFF'
-        });
-      });
-
-    return events;
+    return matchedTodos.map((task) => {
+      const endDate = new Date(task.scheduled_completion_date);
+      return {
+        id: String(task.id),
+        title: task.title,
+        start: task.start_date,
+        end: new Date(endDate.getTime() + 86400000).toISOString().split('T')[0],
+        allDay: true,
+        color: '#007BFF'
+      };
+    });
   };
 
   return (
     <div>
+      {/* ADDED FEATURE Search Bar */}
+      <div className="calendar-search-container">
+        <input
+          type="text"
+          placeholder="Search Todo"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="calendar-search-input"
+        />
+      </div>
+
+      {/* ADDED FEATURE Warning if no matching todos */}
+      {searchTerm.trim() !== "" && matchedTodos.length === 0 && (
+        <div className="search-warning">
+          No such task found for "{searchTerm}"
+        </div>
+      )}
+
+      {/*Calendar */}
       <FullCalendar
+        ref={calendarRef}
         plugins={[dayGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"
+        initialDate={currentDate}
         events={generateCalendarEvents()}
         dateClick={(arg) => {
-          // manually format date to avoid timezone issues
           const year = arg.date.getFullYear();
           const month = String(arg.date.getMonth() + 1).padStart(2, '0');
           const day = String(arg.date.getDate()).padStart(2, '0');
-          const dateStr = `${year}-${month}-${day}`;
-
-          // navigate to todos page with selected date as query parameter
-          navigate(`/todos?date=${dateStr}`);
+          navigate(`/todos?date=${year}-${month}-${day}`);
         }}
-        initialDate={currentDate}
         headerToolbar={{ left: 'title', center: '', right: 'today prev,next' }}
+        datesSet={(arg) => setCurrentDate(arg.start)}
       />
     </div>
   );
